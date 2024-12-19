@@ -7,7 +7,7 @@ This repository contains code for experimenting with **Linear Hourglass Transfor
 - Implementation of Linear Hourglass Transformers.
 - Easy-to-follow code structure.
 - Customizable parameters for training and evaluation.
-- Sample datasets for quick testing.
+- Code to download datasets.
 
 ## Requirements
 
@@ -65,20 +65,6 @@ You can modify the configurations in the `config.json` file. This includes:
 ## How It Works
 
 The **Linear Hourglass Transformer** is designed to efficiently process sequential data. It uses a unique structure to compress and expand the input data while applying linear attention mechanisms. This makes it lightweight and suitable for various tasks like time series analysis, natural language processing, and more.
-
-## Example Usage
-
-Here is an example of how you can use this repository:
-
-```python
-from models.hourglass_transformer import HourglassTransformer
-
-# Initialize model
-model = HourglassTransformer(num_layers=4, num_heads=8, d_model=512)
-
-# Train or evaluate your model
-# (Refer to train.py or evaluate.py for detailed usage)
-```
 
 ## Example usage
 
