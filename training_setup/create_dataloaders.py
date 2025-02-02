@@ -7,10 +7,10 @@ from conf import TrainingCfg
 
 
 def create_dataloaders(
-    cfg_dataset: Dict[str, Any], cfg_training: TrainingCfg
+    cfg_dataset: Dict[str, Any], cfg_training: TrainingCfg, tokenizer
 ) -> Tuple[DataLoader, DataLoader, DataLoader, int]:
 
-    train, val, test = hydra.utils.instantiate(cfg_dataset)
+    train, val, test = hydra.utils.instantiate(cfg_dataset, tokenizer=tokenizer)
 
     train_loader = DataLoader(train, batch_size=cfg_training.batch_size)
     test_loader = DataLoader(test, batch_size=cfg_training.batch_size)

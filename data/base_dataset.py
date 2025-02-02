@@ -18,7 +18,7 @@ class BaseDataset(torch.utils.data.Dataset):
     ):
         self.data = data
 
-        self.tokenizer = None
+        self.tokenizer = tokenizer
         self.attention_masks = None
         self.token_type_ids = None
         self.max_length = max_length
