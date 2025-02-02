@@ -39,6 +39,7 @@ class Block(nn.Module):
         act_fun: str = None,
         post_norm: bool = False,
         device: str = "cpu",
+        **kwargs
     ) -> None:
         """Init encoder - stack :param n_layers: the encoder layers on each other"""
         super().__init__()

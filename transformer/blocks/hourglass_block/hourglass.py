@@ -49,6 +49,7 @@ class HourglassBlock(nn.Module):
         sampling_use_linear: bool = True,
         sampling_use_feedforward: bool = True,
         device: str = "cpu",
+        **kwargs
     ) -> None:
         super().__init__()
         self.d_model = d_model

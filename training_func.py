@@ -1,12 +1,16 @@
+import logging
 from typing import Tuple
-from argparse import Namespace
 from pathlib import Path
 
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
 import neptune
+from omegaconf import OmegaConf
 from tqdm import tqdm
+
+from models.base import BaseModel
+from conf.definitions import Experiment
 
 
 def log_batch_neptune(
@@ -33,7 +37,7 @@ def prepare_inputs_and_targets(
     data: torch.Tensor, task: str, device: str
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     if task == "classification":
-        return data[0].to(device), data[1].to(device)
+        return data[0].to(device), data[1].unsqueeze(-1).to(torch.float32).to(device)
     elif task == "sequence_modelling":
         inputs = data.detach().clone().to(device)
         targets = data.contiguous().view(-1).to(device)
@@ -44,20 +48,28 @@ def prepare_inputs_and_targets(
 
 def train_one_batch(
     data: torch.Tensor,
-    model: nn.Module,
+    model: BaseModel,
     optimizer: torch.optim.Optimizer,
     loss_fn: nn.Module,
     update_weights: bool,
     task: str,
 ) -> Tuple[float, int, int, float, float]:
+    # Prepare inputs and targets
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
+
+    # Forward pass
     outputs = model(inputs).view(targets.shape[0], -1)
+
+    # Compute loss
     loss = loss_fn(outputs, targets)
+
+    # Backward pass
     loss.backward()
     if update_weights:
         optimizer.step()
         optimizer.zero_grad()
 
+    # Compute metrics
     correct = (outputs.argmax(-1) == targets).sum().item()
     total = outputs.shape[0]
 
@@ -66,7 +78,7 @@ def train_one_batch(
 
 def train_one_epoch(
     train_loader: DataLoader,
-    model: nn.Module,
+    model: BaseModel,
     optimizer: torch.optim.Optimizer,
     scheduler: torch.optim.lr_scheduler.LRScheduler,
     loss_fn: nn.Module,
@@ -81,6 +93,7 @@ def train_one_epoch(
     accumulated_steps = 0
 
     for inputs in tqdm(train_loader, "Training:"):
+        # Handle gradient accumulation
         if accumulated_steps == gradient_accumulation_steps - 1:
             update_weights = True
             accumulated_steps = 0
@@ -88,11 +101,16 @@ def train_one_epoch(
             update_weights = False
             accumulated_steps += 1
 
+        # Train one batch
         loss, cor, tot = train_one_batch(
             inputs, model, optimizer, loss_fn, update_weights, task
         )
+
+        # Step the scheduler
         if scheduler is not None:
             scheduler.step()
+
+        # Log batch metrics
         n_iter += 1
         running_loss += loss
         correct += cor
@@ -107,25 +125,29 @@ def train_one_epoch(
             n_iter=n_iter,
             lr=lr,
         )
-
+    # Log epoch metrics
     run["metrics/train_epoch_avg_loss"].append(running_loss / len(train_loader))
     run["metrics/train_epoch_accuracy"].append(correct / total)
     return n_iter
 
 
 def evaluate_one_batch(
-    data: torch.Tensor, model: nn.Module, loss_fn: nn.Module, task: str
+    data: torch.Tensor, model: BaseModel, loss_fn: nn.Module, task: str
 ) -> Tuple[float, int, int]:
+    # Prepare inputs and targets
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
+    # Forward pass
     outputs = model(inputs).view(targets.shape[0], -1)
+    # Compute loss
     loss = loss_fn(outputs, targets)
+    # Compute metrics
     correct = (outputs.argmax(-1) == targets).sum().item()
     return loss.item(), correct, outputs.shape[0]
 
 
 def evaluate_one_epoch(
     val_loader: DataLoader,
-    model: nn.Module,
+    model: BaseModel,
     loss_fn: nn.Module,
     run: neptune.Run,
     task: str,
@@ -151,8 +173,8 @@ def evaluate_one_epoch(
 
 
 def train(
-    model: nn.Module,
-    args: Namespace,
+    cfg: Experiment,
+    model: BaseModel,
     optimizer: torch.optim.Optimizer,
     scheduler: torch.optim.lr_scheduler.LRScheduler,
     loss_fn: nn.Module,
@@ -160,14 +182,14 @@ def train(
     val_loader: DataLoader,
     test_loader: DataLoader,
     run: neptune.Run,
-    task: str,
-    epochs: int = 10,
+    logger: logging.Logger,
 ) -> None:
-    log_hyperparameters(model, args, run)
+    run["config"] = OmegaConf.to_container(cfg)  # Save the config to Neptune
+
     n_iter = 0
-    for epoch in range(epochs):
-        print(f"Epoch {epoch+1}/{epochs}")
-        print(f"Learning rate: {optimizer.param_groups[0]['lr']}")
+    for epoch in range(cfg.training.epochs):
+        logger.info(f"Epoch {epoch+1}/{cfg.training.epochs}")
+        logger.info(f"Learning rate: {optimizer.param_groups[0]['lr']}")
 
         n_iter = train_one_epoch(
             train_loader,
@@ -175,41 +197,21 @@ def train(
             optimizer,
             scheduler,
             loss_fn,
-            args.gradient_accumulation_steps,
+            cfg.training.gradient_accumulation_steps,
             run,
-            task,
+            cfg.task,
             n_iter,
         )
 
-        if args.use_validation:
-            evaluate_one_epoch(val_loader, model, loss_fn, run, task, "val")
+        if cfg.training.use_validation:
+            evaluate_one_epoch(val_loader, model, loss_fn, run, cfg.task, "val")
 
-        save_model(model, args, run, epoch)
+        save_model(model, run, epoch)
 
-    evaluate_one_epoch(test_loader, model, loss_fn, run, task, "test")
-
-
-def log_hyperparameters(model: nn.Module, args: Namespace, run: neptune.Run) -> None:
-    run["model_params"] = model.get_hyperparams()
-    run["training_params"] = {
-        "init_lr": args.init_lr,
-        "batch_size": args.batch_size,
-        "gradient_accumulation_steps": args.gradient_accumulation_steps,
-        "epochs": args.epochs,
-        "scheduler": args.scheduler,
-        "scheduler_lr_warmup_steps": args.scheduler_lr_warmup_steps,
-        "scheduler_num_all_steps": args.scheduler_num_all_steps,
-        "scheduler_final_lr_fraction": args.scheduler_final_lr_fraction,
-        "task": args.task,
-        "dataset": args.dataset,
-        "tokenizer": args.tokenizer,
-        "max_length": args.max_length,
-    }
+    evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
 
 
-def save_model(model: nn.Module, args: Namespace, run: neptune.Run, epoch: int) -> None:
-    path = Path(
-        f"models_checkpoints/{run['sys/id'].fetch()}_{args.model}_{args.mha_type}"
-    )
+def save_model(model: BaseModel, run: neptune.Run, epoch: int) -> None:
+    path = Path(f"models_checkpoints/{run['sys/id'].fetch()}")
     path.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), path / f"epoch-{epoch}.pth")

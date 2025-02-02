@@ -1,0 +1,5 @@
+project_name: ./.neptune_project_name
+api_token: ./.neptune_api_token
+tags: []
+name: None
+custom_run_name: None

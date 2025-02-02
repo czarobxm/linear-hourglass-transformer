@@ -11,11 +11,14 @@ from transformer.positional_encoding import PositionalEncoding
 from transformer.blocks.hourglass_block.utils import ShiftRight
 
 
-class DecoderOnlyTransformer(BaseModel):
-    """Decoder-only transformer model."""
+class ClassifierTransformer(BaseModel):
+    """Classifier transformer model."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        kwargs["n_layers"] = self.n_layers
+        kwargs["sizes"] = self.sizes
+        kwargs["act_fun"] = self.act_fun
 
         # Embedders
         self.embedder = nn.Embedding(self.vocab_size, self.d_model)
@@ -24,15 +27,18 @@ class DecoderOnlyTransformer(BaseModel):
         self.pos_enc = PositionalEncoding(
             self.sizes[0], self.d_model, self.pos_enc_type, device=self.device
         )
+
         # Shift right
         self.shift_right = ShiftRight(shift=1)
+
         # Decoder
         if len(self.n_layers) == len(self.sizes) == 1:
             self.decoder_block = Block(**kwargs)
         else:
             self.decoder_block = HourglassBlock(**kwargs)
+
         # Classifier
-        self.classifier = nn.Linear(self.d_model, self.vocab_size)
+        self.classifier = nn.Linear(self.d_model, 1)
 
         # Device
         self.to(self.device)
@@ -47,7 +53,9 @@ class DecoderOnlyTransformer(BaseModel):
         # Positional Encoding
         x = self.pos_enc(x)
         # Decoder
-        x = self.decoder_block(x, causal=True, inference=inference)
+        x = self.decoder_block(x, causal=False, inference=inference)
         # Linear
         x = self.classifier(x)
+        # Mean
+        x = x.mean(dim=1)
         return x

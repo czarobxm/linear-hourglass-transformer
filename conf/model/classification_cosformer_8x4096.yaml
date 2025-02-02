@@ -1,0 +1,8 @@
+defaults:
+  - mha: cosformer
+  - hourglass: default
+
+type: classification
+structure: 8x4096
+pos_enc_type: linear
+use_embedding: true

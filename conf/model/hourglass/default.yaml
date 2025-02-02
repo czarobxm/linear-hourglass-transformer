@@ -1,0 +1,8 @@
+downsampling_type: linear
+upsampling_type: linear
+attention_downsampling: false
+attention_upsampling: false
+upsampling_residual: true
+sampling_post_norm: true
+sampling_use_linear: true
+sampling_use_feedforward: false

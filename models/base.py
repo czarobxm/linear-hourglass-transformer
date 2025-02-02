@@ -1,16 +1,12 @@
 """Base model class."""
 
-from typing import Union
+from __future__ import annotations
+from typing import Dict, Any
 
 import torch
 from torch import nn
 
-from transformer.multi_head_attention.attention_mechanism.attn_params import (
-    LinearAttnParams,
-    VanillaParams,
-    PerformerParams,
-    CosformerParams,
-)
+from conf.definitions.model import ModelCfg
 
 
 class BaseModel(nn.Module):
@@ -38,12 +34,7 @@ class BaseModel(nn.Module):
         vocab_size: int,
         structure: str,
         num_heads: int,
-        method_params: Union[
-            LinearAttnParams,
-            VanillaParams,
-            PerformerParams,
-            CosformerParams,
-        ],
+        method_params: Dict[str, Any],
         apply_rotary_pos_enc: bool,
         dropout: float,
         act_fun: str,
@@ -91,9 +82,37 @@ class BaseModel(nn.Module):
 
         self.n_layers, self.sizes = self.parse_structure()
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
         raise NotImplementedError
+
+    @classmethod
+    def from_cfg(
+        cls, cfg_model: ModelCfg, vocab_size: int, device: str = "cuda"
+    ) -> BaseModel:
+        """Initialize the model from the cfguration."""
+        return cls(
+            d_model=cfg_model.mha.d_model,
+            vocab_size=vocab_size,
+            structure=cfg_model.structure,
+            num_heads=cfg_model.mha.num_heads,
+            method_params=cfg_model.mha.method_params,
+            apply_rotary_pos_enc=cfg_model.mha.apply_rotary_pos_enc,
+            dropout=cfg_model.mha.dropout,
+            act_fun=cfg_model.mha.act_fun,
+            post_norm=cfg_model.mha.post_norm,
+            pos_enc_type=cfg_model.pos_enc_type,
+            use_embedding=cfg_model.use_embedding,
+            hourglass_downsampling_type=cfg_model.hourglass.downsampling_type,
+            hourglass_upsampling_type=cfg_model.hourglass.upsampling_type,
+            hourglass_attention_downsampling=cfg_model.hourglass.attention_downsampling,
+            hourglass_attention_upsampling=cfg_model.hourglass.attention_upsampling,
+            hourglass_upsampling_residual=cfg_model.hourglass.upsampling_residual,
+            hourglass_sampling_post_norm=cfg_model.hourglass.sampling_post_norm,
+            hourglass_sampling_use_linear=cfg_model.hourglass.sampling_use_linear,
+            hourglass_sampling_use_feedforward=cfg_model.hourglass.sampling_use_feedforward,
+            device=device,
+        )
 
     def parse_structure(self):
         """Parse the structure string and return the number of layers and sizes."""

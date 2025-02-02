@@ -1,54 +1,61 @@
 import logging
 
-from training_func import train
-from training_setup.attention_params import get_attention_params
+import hydra
+from hydra.core.config_store import ConfigStore
 
+from conf.definitions import Experiment
+from training_func import train
 from training_setup import (
-    parse_arguments,
     setup_logging,
-    setup_tokenizer,
     create_dataloaders,
     setup_neptune,
     initialize_model,
     setup_training,
+    setup_tokenizer,
 )
 
 
-def main():
-    args = parse_arguments()
-    setup_logging()
+# Registering the Config class with the name 'config'.
+cs = ConfigStore.instance()
+cs.store(config_path="./conf", name="config", node=Experiment)
+
+
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def main(cfg: Experiment) -> None:
+    logger = setup_logging()
     logging.info("Starting training script.")
 
-    tokenizer = setup_tokenizer(args)
     logging.info("Tokenizer set up.")
 
-    logging.info("Loading and tokenizing dataset...")
-    train_loader, val_loader, test_loader = create_dataloaders(args, tokenizer)
+    logging.info("Creating DataLoaders...")
+    train_loader, val_loader, test_loader = create_dataloaders(cfg.dataset, cfg.training)
     logging.info("Data loaders created.")
 
-    run = setup_neptune(args)
+    logging.info("Creating tokenizer...")
+    tokenizer = setup_tokenizer(cfg.tokenizer)
+    logging.info("Tokenizer created.")
+
+    run = setup_neptune(cfg.neptune)
     logging.info("Neptune run initialized.")
 
-    method_params = get_attention_params(args)
-    model = initialize_model(args, tokenizer, method_params)
-    logging.info("Model %s initialized.", args.model)
+    model = initialize_model(cfg.model, tokenizer.vocab_size)
+    logging.info("Model %s initialized: ", cfg.model)
 
-    training_setup = setup_training(args, model)
+    training_setup = setup_training(cfg.training, model)
     logging.info("Training setup completed.")
 
     logging.info("Starting training...")
     train(
-        model,
-        args,
-        training_setup["optimizer"],
-        training_setup["scheduler"],
-        training_setup["loss_fn"],
-        train_loader,
-        val_loader,
-        test_loader,
-        run,
-        task=args.task,
-        epochs=args.epochs,
+        cfg=cfg,
+        model=model,
+        optimizer=training_setup["optimizer"],
+        scheduler=training_setup["scheduler"],
+        loss_fn=training_setup["loss_fn"],
+        train_loader=train_loader,
+        val_loader=val_loader,
+        test_loader=test_loader,
+        run=run,
+        logger=logger,
     )
     logging.info("Training finished.")
 
@@ -59,4 +66,5 @@ def main():
     run.stop()
 
 
-main()
+if __name__ == "__main__":
+    main()  # pylint: disable=E1120

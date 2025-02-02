@@ -1,0 +1,10 @@
+defaults:
+  - method_params: cosformer
+
+mha_type: cosformer
+d_model: 512
+num_heads: 8
+dropout: 0.0
+act_fun: relu
+apply_rotary_pos_enc: false
+post_norm: false

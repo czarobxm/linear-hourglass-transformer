@@ -1,0 +1,10 @@
+defaults:
+  - model: classification_cosformer_8x4096
+  - training: default
+  - tokenizer: google-byt5-small
+  - neptune: default
+  - dataset: enwik9/enwik9_512
+  - _self_
+
+task: classification
+device: cuda
