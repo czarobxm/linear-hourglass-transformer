@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import torchvision
 from transformers import PreTrainedTokenizer
@@ -49,10 +49,16 @@ class Cifar10(BaseDataset):
         return img
 
     @classmethod
-    def load_raw_splits(cls, path: str, **kwargs):
+    def download_dataset(cls, path: Path):
+        raise ValueError(
+            "Downloading is handled by the datasets library in the load_raw_splits method"
+        )
+
+    @classmethod
+    def load_raw_splits(cls, path: Path, **kwargs):
         if path is None:
-            path = os.path.abspath("./datastorage/cifar10")
-        os.makedirs(path, exist_ok=True)
+            path = Path("./datastorage/cifar10")
+        path.mkdir(parents=True, exist_ok=True)
 
         train = load_dataset(
             "uoft-cs/cifar10", cache_dir=path, split="train", resume_download=None

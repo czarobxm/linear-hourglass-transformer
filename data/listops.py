@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pandas as pd
 from transformers import PreTrainedTokenizer
@@ -41,9 +41,15 @@ class ListOps(BaseDataset):
         return token_dict["input_ids"].squeeze(0), self.data["label"][index]
 
     @classmethod
+    def download_dataset(cls, path: Path) -> None:
+        raise ValueError(
+            "Download the dataset from the LRA (Long Range Arena) github page (https://github.com/google-research/long-range-arena) and put the unzipped folder in the datastorage folder"
+        )
+
+    @classmethod
     def load_raw_splits(cls, path: str, **kwargs):
         if path is None:
-            path = os.path.abspath("./datastorage/lra_release 3/listops-1000")
+            path = Path("./datastorage/lra_release 3/listops-1000")
 
         train = pd.read_csv(
             f"{path}/basic_train.tsv",

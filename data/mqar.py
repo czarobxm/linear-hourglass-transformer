@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import torch
 import numpy as np
@@ -72,15 +72,15 @@ def generate_mqar_data(
 
 
 def create_path(
-    path,
-    inputs_or_labels,
-    vocab_size,
-    num_examples,
-    input_seq_len,
-    seed,
-    power_a,
-    num_kv_pairs,
-    random_non_queries,
+    path: Path,
+    inputs_or_labels: str,
+    vocab_size: str,
+    num_examples: str,
+    input_seq_len: str,
+    seed: str,
+    power_a: str,
+    num_kv_pairs: str,
+    random_non_queries: str,
 ):
     full_path = (
         f"{path}/"
@@ -93,8 +93,8 @@ def create_path(
         f"num_kv_pairs_{num_kv_pairs}-"
         f"random_non_queries_{random_non_queries}.pt"
     )
-    if not os.path.exists(path):
-        os.makedirs(path, exist_ok=True)
+    if not path.exists(path):
+        path.mkdir(path, exist_ok=True)
     return full_path
 
 
@@ -140,7 +140,7 @@ class MQAR(BaseArtificialDataset):
     @classmethod
     def load_raw_splits(
         cls,
-        path: str,
+        path: Path = None,
         vocab_size: int = 128,
         num_examples: int = 32,
         input_seq_len: int = 64,
@@ -151,7 +151,7 @@ class MQAR(BaseArtificialDataset):
         **kwargs,
     ):
         if path is None:
-            path = os.path.abspath("./datastorage/mqar")
+            path = Path("./datastorage/mqar")
 
         params = {
             "vocab_size": vocab_size,
@@ -187,11 +187,11 @@ class MQAR(BaseArtificialDataset):
     @classmethod
     def create_artificial_datasets(
         cls,
-        path: str,
+        path: Path,
         **kwargs,
     ):
         if path is None:
-            path = os.path.abspath("./datastorage/mqar")
+            path = Path("./datastorage/mqar")
         inputs, labels = generate_mqar_data(**kwargs)
         torch.save(inputs, create_path(path=path, inputs_or_labels="inputs", **kwargs))
         torch.save(labels, create_path(path=path, inputs_or_labels="labels", **kwargs))

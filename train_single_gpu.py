@@ -25,15 +25,15 @@ def main(cfg: Experiment) -> None:
     logger = setup_logging()
     logging.info("Starting training script.")
 
-    logging.info("Tokenizer set up.")
-
-    logging.info("Creating DataLoaders...")
-    train_loader, val_loader, test_loader = create_dataloaders(cfg.dataset, cfg.training)
-    logging.info("Data loaders created.")
-
     logging.info("Creating tokenizer...")
     tokenizer = setup_tokenizer(cfg.tokenizer)
     logging.info("Tokenizer created.")
+
+    logging.info("Creating DataLoaders...")
+    train_loader, val_loader, test_loader = create_dataloaders(
+        cfg.dataset, cfg.training, tokenizer
+    )
+    logging.info("Data loaders created.")
 
     run = setup_neptune(cfg.neptune)
     logging.info("Neptune run initialized.")

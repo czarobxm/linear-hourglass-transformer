@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from typing import Dict
 import urllib
 import zipfile
@@ -50,27 +50,31 @@ class Enwik9(BaseDataset):
         return token_dict["input_ids"].squeeze(0)
 
     @classmethod
-    def download_dataset(cls, path: str = os.path.abspath("./datastorage/enwik9")):
-        os.makedirs(path, exist_ok=True)
+    def download_dataset(cls, path: Path = None):
+        if path is None:
+            path = Path("./datastorage/enwik9")
+
+        path.mkdir(path, exist_ok=True)
 
         # Download
-        if not os.path.exists(path + "/enwik9"):
+        if not path.exists(path / "enwik9"):
             urllib.request.urlretrieve(
-                "http://mattmahoney.net/dc/enwik9.zip", path + "/enwik9.zip"
+                "http://mattmahoney.net/dc/enwik9.zip", path / "enwik9.zip"
             )
 
         # Unzip
-        with zipfile.ZipFile(path + "/enwik9.zip", "r") as zip_ref:
+        with zipfile.ZipFile(path / "enwik9.zip", "r") as zip_ref:
             zip_ref.extractall(path)
 
         # Remove zip file
-        os.remove(path + "/enwik9.zip")
+        zip_path = path / "enwik9.zip"
+        zip_path.unlink()
 
     @classmethod
-    def load_raw_splits(cls, path: str, **kwargs) -> Dict[str, str]:
+    def load_raw_splits(cls, path: Path, **kwargs) -> Dict[str, str]:
         if path is None:
-            path = os.path.abspath("./datastorage/enwik9")
-        if not os.path.exists(path + "/enwik9"):
+            path = Path("./datastorage/enwik9")
+        if not path.exists(path + "/enwik9"):
             cls.download_dataset(path)
         with open(path + "/enwik9", "r", encoding="utf-8") as file:
             text = file.read()

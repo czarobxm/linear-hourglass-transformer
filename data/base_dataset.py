@@ -4,6 +4,10 @@ import torch
 from transformers import AutoTokenizer
 
 
+class MethodNotSupportedError(Exception):
+    pass
+
+
 class BaseDataset(torch.utils.data.Dataset):
     name: str = "base_dataset"
     website: str = ""
@@ -52,6 +56,12 @@ class BaseDataset(torch.utils.data.Dataset):
         )
 
     @classmethod
+    def download_dataset(cls, path: str):
+        raise NotImplementedError(
+            "This method should be implemented in the derived class"
+        )
+
+    @classmethod
     def create_split_datasets(
         cls,
         split: str = "all",
@@ -84,6 +94,10 @@ class BaseDataset(torch.utils.data.Dataset):
 
 class BaseArtificialDataset(BaseDataset):
     name = "base_artificial_dataset"
+
+    @classmethod
+    def download_dataset(cls, path: str):
+        raise MethodNotSupportedError("Artificial datasets do not need to be downloaded")
 
     @classmethod
     def create_artificial_datasets(cls, path: str, **kwargs):

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from transformers import PreTrainedTokenizer
 from datasets import load_dataset
@@ -41,7 +41,16 @@ class IMDB(BaseDataset):
         return token_dict["input_ids"].squeeze(0), self.data["label"][index]
 
     @classmethod
-    def load_raw_splits(cls, path: str = os.path.abspath("./datastorage/imdb"), **kwargs):
+    def download_dataset(cls, path: Path):
+        raise ValueError(
+            "Downloading is handled by the datasets library in the load_raw_splits method"
+        )
+
+    @classmethod
+    def load_raw_splits(cls, path: Path, **kwargs):
+        if path is None:
+            path = Path("./datastorage/imdb")
+
         train = load_dataset(
             "stanfordnlp/imdb", cache_dir=path, split="train", resume_download=None
         )

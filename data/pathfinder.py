@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pandas as pd
 from transformers import PreTrainedTokenizer
@@ -18,7 +18,6 @@ class Pathfinder(BaseDataset):
     def __init__(
         self,
         data: str,
-        path: str,
         tokenizer: PreTrainedTokenizer,
         shuffle: bool = True,
         max_length: int = 512,
@@ -29,7 +28,6 @@ class Pathfinder(BaseDataset):
             tokenizer=tokenizer,
             max_length=max_length,
             shuffle=shuffle,
-            path=path,
             device=device,
         )
 
@@ -53,16 +51,24 @@ class Pathfinder(BaseDataset):
         return image_tensor, self.data["label"][index]
 
     @classmethod
-    def load_raw_splits(cls, path: str):
+    def download_dataset(cls, path: Path) -> None:
+        raise ValueError(
+            "Download the dataset from the LRA (Long Range Arena) github page (https://github.com/google-research/long-range-arena) and put the unzipped folder in the datastorage folder"
+        )
+
+    @classmethod
+    def load_raw_splits(cls, path: Path, **kwargs):
         if path is None:
-            path = os.path.abspath(
+            path = Path(
                 "./datastorage/lra_release 3/lra_release/pathfinder32/curv_baseline"
             )
 
         paths_to_images = []
         labels = []
 
-        for file in os.listdir(path + "/metadata"):
+        metadata_path = path / "metadata"
+
+        for file in metadata_path.iterdir():
             df = pd.read_csv(path + "/metadata/" + file, sep=" ", header=None)
             path_to_images_single_file = df[0] + "/" + df[1]
             paths_to_images.extend(path_to_images_single_file.tolist())

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import torch
 from transformers import PreTrainedTokenizer
@@ -44,7 +44,7 @@ def generate_selective_copying_data(
 
 
 def create_path(
-    path,
+    path: Path,
     inputs_or_labels,
     context_len: int = 5,
     vocab_size: int = 5,
@@ -59,8 +59,8 @@ def create_path(
         f"query_len_{query_len}-"
         f"num_samples_{num_samples}.pt"
     )
-    if not os.path.exists(path):
-        os.makedirs(path, exist_ok=True)
+    if not path.exists(path):
+        path.mkdir(path, exist_ok=True)
     return full_path
 
 
@@ -100,7 +100,7 @@ class SelectiveCopying(BaseArtificialDataset):
     @classmethod
     def create_artificial_datasets(cls, path: str, **kwargs):
         if path is None:
-            path = os.path.abspath("./datastorage/sequence_modelling")
+            path = Path("./datastorage/sequence_modelling")
         inputs, labels = generate_selective_copying_data(**kwargs)
         torch.save(inputs, create_path(path, "inputs", **kwargs))
         torch.save(labels, create_path(path, "labels", **kwargs))
@@ -108,7 +108,7 @@ class SelectiveCopying(BaseArtificialDataset):
     @classmethod
     def load_raw_splits(cls, path: str, **kwargs):
         if path is None:
-            path = os.path.abspath("./datastorage/sequence_modelling")
+            path = Path("./datastorage/sequence_modelling")
 
         inputs = torch.load(
             create_path(path=path, inputs_or_labels="inputs", **kwargs),
