@@ -1,7 +1,6 @@
 defaults:
-  mha_params: cosformer
-  
-mha_type: vanilla
+  - method_params: vanilla
+
 d_model: 512
 num_heads: 8
 dropout: 0.0

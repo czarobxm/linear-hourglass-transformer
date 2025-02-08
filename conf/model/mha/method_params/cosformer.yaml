@@ -1,1 +1,2 @@
-epsilon: 0.000001
+method: cosformer
+eps: 0.000001

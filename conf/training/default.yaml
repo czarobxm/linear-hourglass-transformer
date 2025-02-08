@@ -1,4 +1,5 @@
 defaults:
+  - optimizer: adam
   - scheduler: default
   - criterion: cross_entropy
 
