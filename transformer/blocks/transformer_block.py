@@ -25,7 +25,7 @@ class Block(nn.Module):
 
     def __init__(
         self,
-        n_layers: Union[int],
+        n_layers: int,
         d_model: int,
         num_heads: int,
         method_params: Union[

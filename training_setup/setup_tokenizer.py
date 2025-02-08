@@ -20,7 +20,7 @@ def setup_tokenizer(cfg_tokenizer: Dict[str, Any]) -> AutoTokenizer:
         cfg_tokenizer.name,
         resume_download=None,
     )
-    tokenizer.add_special_tokens(SPECIAL_TOKENS_DICT)
+    # tokenizer.add_special_tokens(SPECIAL_TOKENS_DICT)
     # if tokenizer in ["gpt2", "bert-base-uncased"]:
     #     tokenizer.add_special_tokens(SPECIAL_TOKENS_DICT)
     #     tokenizer._tokenizer.post_processor = (  # pylint: disable=protected-access

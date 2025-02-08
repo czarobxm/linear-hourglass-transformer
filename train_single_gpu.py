@@ -2,6 +2,7 @@ import logging
 
 import hydra
 from hydra.core.config_store import ConfigStore
+from transformers import AutoTokenizer
 
 from conf.definitions import Experiment
 from training_func import train
@@ -17,16 +18,17 @@ from training_setup import (
 
 # Registering the Config class with the name 'config'.
 cs = ConfigStore.instance()
-cs.store(config_path="./conf", name="config", node=Experiment)
+cs.store(name="experiment", node=Experiment)
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: Experiment) -> None:
+    device = cfg.device
     logger = setup_logging()
     logging.info("Starting training script.")
 
     logging.info("Creating tokenizer...")
-    tokenizer = setup_tokenizer(cfg.tokenizer)
+    tokenizer: AutoTokenizer = setup_tokenizer(cfg.tokenizer)
     logging.info("Tokenizer created.")
 
     logging.info("Creating DataLoaders...")
@@ -38,7 +40,8 @@ def main(cfg: Experiment) -> None:
     run = setup_neptune(cfg.neptune)
     logging.info("Neptune run initialized.")
 
-    model = initialize_model(cfg.model, tokenizer.vocab_size)
+    model = initialize_model(cfg.model, tokenizer.vocab_size, device=device)
+    print(tokenizer.vocab_size)
     logging.info("Model %s initialized: ", cfg.model)
 
     training_setup = setup_training(cfg.training, model)

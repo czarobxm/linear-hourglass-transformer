@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 
 # from tokenizers.processors import TemplateProcessing
@@ -72,6 +74,7 @@ class BaseDataset(torch.utils.data.Dataset):
         device: str = "cpu",
         **kwargs,
     ):
+        path = Path(path)
         splits = cls.load_raw_splits(path=path, **kwargs)
         all_kwargs = kwargs
         all_kwargs.update(

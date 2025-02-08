@@ -17,6 +17,10 @@ class DecoderOnlyTransformer(BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        kwargs["n_layers"] = self.n_layers
+        kwargs["sizes"] = self.sizes
+        kwargs["act_fun"] = self.act_fun
+
         # Embedders
         self.embedder = nn.Embedding(self.vocab_size, self.d_model)
 

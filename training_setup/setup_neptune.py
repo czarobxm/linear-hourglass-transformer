@@ -29,8 +29,6 @@ def setup_neptune(cfg_neptune: NeptuneCfg) -> neptune.Run:
         project=get_project_name(cfg_neptune),
         api_token=get_api_token(cfg_neptune),
         custom_run_id=hashlib.md5(str(time.time()).encode()).hexdigest(),
-        name=cfg_neptune.name,
-        tags=cfg_neptune.tags,
     )
 
     def handler(sig, frame):  # pylint: disable=unused-argument

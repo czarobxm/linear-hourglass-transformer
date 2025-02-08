@@ -58,8 +58,9 @@ def train_one_batch(
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
 
     # Forward pass
-    outputs = model(inputs).view(targets.shape[0], -1)
 
+    outputs = model(inputs)
+    outputs = outputs.view(targets.shape[0], -1)
     # Compute loss
     loss = loss_fn(outputs, targets)
 

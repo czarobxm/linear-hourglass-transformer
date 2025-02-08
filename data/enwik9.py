@@ -74,9 +74,9 @@ class Enwik9(BaseDataset):
     def load_raw_splits(cls, path: Path, **kwargs) -> Dict[str, str]:
         if path is None:
             path = Path("./datastorage/enwik9")
-        if not path.exists(path + "/enwik9"):
+        if not (path / "enwik9").exists():
             cls.download_dataset(path)
-        with open(path + "/enwik9", "r", encoding="utf-8") as file:
+        with open(path / "enwik9", "r", encoding="utf-8") as file:
             text = file.read()
         train = text[:90_000_000]
         val = text[90_000_000:95_000_000]
