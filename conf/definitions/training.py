@@ -5,8 +5,8 @@ from dataclasses import dataclass
 @dataclass
 class SchedulerCfg:
     scheduler: bool
-    lr_warmup_steps: int
-    num_all_steps: int
+    lr_warmup_fraction: float
+    scheduler_steps_fraction: float
     final_lr_fraction: float
 
 

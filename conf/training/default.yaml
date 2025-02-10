@@ -4,6 +4,6 @@ defaults:
   - criterion: cross_entropy
 
 epochs: 1
-batch_size: 4096
+batch_size: 1
 gradient_accumulation_steps: 1
 use_validation: false

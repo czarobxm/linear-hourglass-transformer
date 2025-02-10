@@ -1,0 +1,5 @@
+_target_: data.listops.ListOps.create_split_datasets
+split: all
+path: ./datastorage/
+max_length: 512
+shuffle: true

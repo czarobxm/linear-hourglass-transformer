@@ -13,5 +13,3 @@ defaults:
 
 task: sequence_modelling
 device: cuda
-
-training.scheduler: imdb

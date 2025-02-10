@@ -8,8 +8,8 @@ defaults:
   - training: default
   - tokenizer: google-byt5-small
   - neptune: default
-  - dataset: enwik9/enwik9_4096
+  - dataset: listops/listops_4096
   - _self_
 
 task: sequence_modelling
-device: cpu
+device: cuda

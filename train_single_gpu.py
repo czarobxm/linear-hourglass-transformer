@@ -21,7 +21,7 @@ cs = ConfigStore.instance()
 cs.store(name="experiment", node=Experiment)
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="config")
+@hydra.main(version_base=None, config_path="conf/experiments", config_name="config")
 def main(cfg: Experiment) -> None:
     device = cfg.device
     logger = setup_logging()
@@ -44,7 +44,7 @@ def main(cfg: Experiment) -> None:
     print(tokenizer.vocab_size)
     logging.info("Model %s initialized: ", cfg.model)
 
-    training_setup = setup_training(cfg.training, model)
+    training_setup = setup_training(cfg.training, model, len(train_loader))
     logging.info("Training setup completed.")
 
     logging.info("Starting training...")
