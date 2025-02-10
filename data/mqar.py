@@ -135,7 +135,10 @@ class MQAR(BaseArtificialDataset):
         return self.data["inputs"].shape[0]
 
     def __getitem__(self, index):
-        return (self.data["inputs"][index], self.data["labels"][index])
+        return (
+            self.data["inputs"][index].to(self.device),
+            self.data["labels"][index].to(self.device),
+        )
 
     @classmethod
     def load_raw_splits(

@@ -38,7 +38,10 @@ class IMDB(BaseDataset):
             max_length=self.max_length,
             return_tensors="pt",
         ).to(self.device)
-        return token_dict["input_ids"].squeeze(0), self.data["label"][index]
+        return (
+            token_dict["input_ids"].squeeze(0).to(self.device),
+            self.data["label"][index].to(self.device),
+        )
 
     @classmethod
     def download_dataset(cls, path: Path):

@@ -51,8 +51,8 @@ class ANN(BaseDataset):
         ).to(self.device)
 
         return (
-            token_dict["input_ids"].squeeze(0),
-            self.data["label"][index],
+            token_dict["input_ids"].squeeze(0).to(self.device),
+            self.data["label"][index].to(self.device),
         )
 
     @classmethod

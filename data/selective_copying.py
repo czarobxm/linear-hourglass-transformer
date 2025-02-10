@@ -95,7 +95,10 @@ class SelectiveCopying(BaseArtificialDataset):
         return self.data["inputs"].shape[0]
 
     def __getitem__(self, index):
-        return (self.data["inputs"][index], self.data["labels"][index])
+        return (
+            self.data["inputs"][index].to(self.device),
+            self.data["labels"][index].to(self.device),
+        )
 
     @classmethod
     def create_artificial_datasets(cls, path: str, **kwargs):

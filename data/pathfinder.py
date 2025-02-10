@@ -48,7 +48,7 @@ class Pathfinder(BaseDataset):
         image = self._load_img(index)
         transform = transforms.ToTensor()
         image_tensor = transform(image)
-        return image_tensor, self.data["label"][index]
+        return image_tensor.to(self.device), self.data["label"][index].to(self.device)
 
     @classmethod
     def download_dataset(cls, path: Path) -> None:

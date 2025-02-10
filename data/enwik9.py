@@ -46,8 +46,8 @@ class Enwik9(BaseDataset):
             truncation="longest_first",
             max_length=self.max_length,
             return_tensors="pt",
-        ).to(self.device)
-        return token_dict["input_ids"].squeeze(0)
+        )
+        return token_dict["input_ids"].squeeze(0).to(self.device)
 
     @classmethod
     def download_dataset(cls, path: Path = None):
