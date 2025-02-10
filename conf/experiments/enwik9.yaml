@@ -1,7 +1,6 @@
 hydra:
   searchpath:
     - file://conf
-    - file://conf/experiments
 
 defaults:
   - model: sequence_modelling_cosformer_8x4096
@@ -12,4 +11,4 @@ defaults:
   - _self_
 
 task: sequence_modelling
-device: cpu
+device: cuda
