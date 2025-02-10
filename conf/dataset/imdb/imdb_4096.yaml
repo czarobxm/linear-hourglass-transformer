@@ -1,5 +1,5 @@
 _target_: data.imdb.IMDB.create_split_datasets
 split: all
 path: ./datastorage/imdb
-max_length: 512
+max_length: 4096
 shuffle: true
