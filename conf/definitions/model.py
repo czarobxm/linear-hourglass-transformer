@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 @dataclass
 class MultiheadAttentionCfg:
-    mha_type: str
     method_params: Dict[str, Any]
     d_model: int
     num_heads: int

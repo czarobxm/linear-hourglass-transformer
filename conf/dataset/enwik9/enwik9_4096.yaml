@@ -1,0 +1,5 @@
+_target_: data.enwik9.Enwik9.create_split_datasets
+split: all
+path: ./datastorage/enwik9
+max_length: 4096
+shuffle: true

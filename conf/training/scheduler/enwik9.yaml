@@ -1,0 +1,4 @@
+scheduler: true
+lr_warmup_steps: 24414
+num_all_steps: 244140
+final_lr_fraction: 0.001

@@ -3,8 +3,7 @@ defaults:
   - scheduler: default
   - criterion: cross_entropy
 
-lr: 0.0001
 epochs: 1
-batch_size: 1
+batch_size: 4096
 gradient_accumulation_steps: 1
 use_validation: false
