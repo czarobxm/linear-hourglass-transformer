@@ -5,10 +5,10 @@ hydra:
 defaults:
   - model: sequence_modelling_cosformer_8x4096
   - training: default
-  - tokenizer: google-byt5-small
   - neptune: default
   - dataset: enwik9/enwik9_4096
   - _self_
 
+tokenizer: custom_char_level
 task: sequence_modelling
 device: cuda

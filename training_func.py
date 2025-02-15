@@ -191,7 +191,7 @@ def train(
     for epoch in range(cfg.training.epochs):
         logger.info(f"Epoch {epoch+1}/{cfg.training.epochs}")
         logger.info(f"Learning rate: {optimizer.param_groups[0]['lr']}")
-
+        print("train loader length: ", len(train_loader))
         n_iter = train_one_epoch(
             train_loader,
             model,

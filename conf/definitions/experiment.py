@@ -11,7 +11,7 @@ class Experiment:
     task: str
     model: ModelCfg
     training: TrainingCfg
-    tokenizer: Dict[str, Any]
+    tokenizer: str
     dataset: Dict[str, Any]
     neptune: NeptuneCfg
     device: str

@@ -67,7 +67,7 @@ class BaseDataset(torch.utils.data.Dataset):
     def create_split_datasets(
         cls,
         split: str = "all",
-        tokenizer: str = "google/byt5-small",
+        tokenizer: AutoTokenizer = None,
         path: str = None,
         max_length: int = 512,
         shuffle: bool = True,
@@ -112,7 +112,7 @@ class BaseArtificialDataset(BaseDataset):
     def create_split_datasets(
         cls,
         split: str = "all",
-        tokenizer: str = "google/byt5-small",
+        tokenizer: AutoTokenizer = None,
         path: str = None,
         max_length: int = 512,
         shuffle: bool = True,
