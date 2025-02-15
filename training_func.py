@@ -37,7 +37,7 @@ def prepare_inputs_and_targets(
     data: torch.Tensor, task: str, device: str
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     if task == "classification":
-        return data[0].to(device), data[1].unsqueeze(-1).to(torch.float32).to(device)
+        return data[0].to(device), data[1].to(torch.float32).to(device)
     elif task == "sequence_modelling":
         inputs = data.detach().clone().to(device)
         targets = data.contiguous().view(-1).to(device)

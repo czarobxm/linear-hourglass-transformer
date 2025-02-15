@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import torch
 from transformers import PreTrainedTokenizer
 from datasets import load_dataset
 
@@ -38,9 +39,10 @@ class IMDB(BaseDataset):
             max_length=self.max_length,
             return_tensors="pt",
         ).to(self.device)
+
         return (
             token_dict["input_ids"].squeeze(0).to(self.device),
-            self.data["label"][index].to(self.device),
+            torch.Tensor([self.data["label"][index]], device=self.device),
         )
 
     @classmethod
