@@ -59,8 +59,8 @@ def create_path(
         f"query_len_{query_len}-"
         f"num_samples_{num_samples}.pt"
     )
-    if not path.exists(path):
-        path.mkdir(path, exist_ok=True)
+    if not path.exists():
+        path.mkdir(exist_ok=True)
     return full_path
 
 

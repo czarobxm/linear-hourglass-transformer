@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import torch
 import torchvision
 from transformers import PreTrainedTokenizer
 from datasets import load_dataset
@@ -34,7 +35,7 @@ class Cifar10(BaseDataset):
     def __getitem__(self, index):
         return (
             self._prepare_image(self.data["image"][index]).to(self.device),
-            self.data["label"][index].to(self.device),
+            torch.Tensor([self.data["label"][index]], device=self.device),
         )
 
     def show_img(self, index) -> None:

@@ -15,8 +15,8 @@ class Enwik9(BaseDataset):
 
     def __init__(
         self,
-        data: str,
-        tokenizer: PreTrainedTokenizer,
+        data: str = "./datastorage/enwik9",
+        tokenizer: PreTrainedTokenizer = None,
         max_length: int = 512,
         shuffle: bool = True,
         device: str = "cpu",

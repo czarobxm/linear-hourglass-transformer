@@ -93,7 +93,7 @@ def create_path(
         f"num_kv_pairs_{num_kv_pairs}-"
         f"random_non_queries_{random_non_queries}.pt"
     )
-    if not path.exists(path):
+    if not path.exists():
         path.mkdir(path, exist_ok=True)
     return full_path
 
@@ -155,6 +155,9 @@ class MQAR(BaseArtificialDataset):
     ):
         if path is None:
             path = Path("./datastorage/mqar")
+
+        if isinstance(path, str):
+            path = Path(path)
 
         params = {
             "vocab_size": vocab_size,

@@ -1,6 +1,7 @@
 from typing import Dict
 from pathlib import Path
 
+import torch
 import pandas as pd
 from transformers import PreTrainedTokenizer
 
@@ -52,7 +53,7 @@ class ANN(BaseDataset):
 
         return (
             token_dict["input_ids"].squeeze(0).to(self.device),
-            self.data["label"][index].to(self.device),
+            torch.Tensor([self.data["label"][index]], device=self.device),
         )
 
     @classmethod
@@ -64,8 +65,8 @@ class ANN(BaseDataset):
     @classmethod
     def load_raw_splits(cls, path: Path = None, **kwargs) -> Dict[str, str]:
         if path is None:
-            path = Path("./datastorage/lra_release 3/lra_release/tsv_data/tsv_data")
-        if path.exists():
+            path = Path("./datastorage/lra_release 3/lra_release/tsv_data")
+        if not path.exists():
             cls.download_dataset(path)
 
         train = pd.read_csv(

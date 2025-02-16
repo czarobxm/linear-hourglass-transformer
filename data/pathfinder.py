@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import torch
 import pandas as pd
 from transformers import PreTrainedTokenizer
 import torchvision
@@ -36,19 +37,21 @@ class Pathfinder(BaseDataset):
 
     def _load_img(self, index):
         return Image.open(
-            self.data["path_base"] + "/" + self.data["path_suffix"][index]
+            self.data["path_base"] / self.data["path_suffix"][index]
         ).convert("RGB")
 
     def show_img(self, index) -> None:
         """Show random image from dataset"""
-        img = torchvision.transforms.functional.pil_to_tensor(self.data["image"][index])
+        img = torchvision.transforms.functional.pil_to_tensor(self._load_img(index))
         plt.imshow(img.permute(1, 2, 0).int())
 
     def __getitem__(self, index):
         image = self._load_img(index)
         transform = transforms.ToTensor()
         image_tensor = transform(image)
-        return image_tensor.to(self.device), self.data["label"][index].to(self.device)
+        return image_tensor.to(self.device), torch.Tensor(
+            [self.data["label"][index]], device=self.device
+        )
 
     @classmethod
     def download_dataset(cls, path: Path) -> None:
@@ -69,7 +72,7 @@ class Pathfinder(BaseDataset):
         metadata_path = path / "metadata"
 
         for file in metadata_path.iterdir():
-            df = pd.read_csv(path + "/metadata/" + file, sep=" ", header=None)
+            df = pd.read_csv(path / "metadata" / file.name, sep=" ", header=None)
             path_to_images_single_file = df[0] + "/" + df[1]
             paths_to_images.extend(path_to_images_single_file.tolist())
             labels.extend(df[2].tolist())

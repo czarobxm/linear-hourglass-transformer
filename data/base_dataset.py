@@ -22,6 +22,7 @@ class BaseDataset(torch.utils.data.Dataset):
         shuffle: bool = True,
         device: str = "cpu",
     ):
+        super().__init__()
         self.data = data
 
         self.tokenizer = tokenizer
@@ -120,6 +121,7 @@ class BaseArtificialDataset(BaseDataset):
         create_artificial_datasets: bool = False,
         **kwargs,
     ):
+        path = Path(path)
         if create_artificial_datasets:
             cls.create_artificial_datasets(path, **kwargs)
 
