@@ -46,9 +46,14 @@ class IMDB(BaseDataset):
         )
 
     @classmethod
-    def download_dataset(cls, path: Path):
-        raise ValueError(
-            "Downloading is handled by the datasets library in the load_raw_splits method"
+    def download_dataset(cls, path: Path = None):
+        if path is None:
+            path = Path("./datastorage/imdb")
+        load_dataset(
+            "stanfordnlp/imdb", cache_dir=path, split="train", resume_download=None
+        )
+        load_dataset(
+            "stanfordnlp/imdb", cache_dir=path, split="test", resume_download=None
         )
 
     @classmethod
