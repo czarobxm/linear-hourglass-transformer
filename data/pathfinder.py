@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 
 from data.base_dataset import BaseDataset
+from data.utils import download_lra
 
 
 class Pathfinder(BaseDataset):
@@ -54,10 +55,11 @@ class Pathfinder(BaseDataset):
         )
 
     @classmethod
-    def download_dataset(cls, path: Path) -> None:
-        raise ValueError(
-            "Download the dataset from the LRA (Long Range Arena) github page (https://github.com/google-research/long-range-arena) and put the unzipped folder in the datastorage folder"
-        )
+    def download_dataset(cls, path: Path = None) -> None:
+        if path is None:
+            path = Path("./datastorage")
+
+        download_lra(path)
 
     @classmethod
     def load_raw_splits(cls, path: Path, **kwargs):
