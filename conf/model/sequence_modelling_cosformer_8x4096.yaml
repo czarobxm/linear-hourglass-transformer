@@ -1,5 +1,5 @@
 defaults:
-  - mha: vanilla
+  - mha: cosformer
   - hourglass: default
 
 type: sequence_modelling
