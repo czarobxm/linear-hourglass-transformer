@@ -6,7 +6,7 @@ from pathlib import Path
 def download_lra(path: Path):
     if (path / "lra_release 3").exists():
         return None
-    path.mkdir(exist_ok=True)
+    path.mkdir(exist_ok=True, parents=True)
 
     lra_path = path / "lra_release 3"
     zip_path = path / "lra_release.gz"

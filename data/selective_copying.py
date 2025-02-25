@@ -60,7 +60,7 @@ def create_path(
         f"num_samples_{num_samples}.pt"
     )
     if not path.exists():
-        path.mkdir(exist_ok=True)
+        path.mkdir(exist_ok=True, parents=True)
     return full_path
 
 

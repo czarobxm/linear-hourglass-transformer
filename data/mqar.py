@@ -94,7 +94,7 @@ def create_path(
         f"random_non_queries_{random_non_queries}.pt"
     )
     if not path.exists():
-        path.mkdir(path, exist_ok=True)
+        path.mkdir(exist_ok=True, parents=True)
     return full_path
 
 
