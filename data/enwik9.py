@@ -54,7 +54,7 @@ class Enwik9(BaseDataset):
         if path is None:
             path = Path("./datastorage/enwik9")
 
-        path.mkdir(path, exist_ok=True)
+        path.mkdir(exist_ok=True)
 
         # Download
         if not path.exists(path / "enwik9"):
