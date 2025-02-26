@@ -1,3 +1,5 @@
+"""Based on https://github.com/HazyResearch/zoology/blob/main/zoology/data/associative_recall.py"""
+
 from pathlib import Path
 
 import torch

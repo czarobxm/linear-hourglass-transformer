@@ -1,3 +1,5 @@
+"""Based on https://github.com/MinhZou/selective-copying-mamba/blob/main/data_generator.py"""
+
 from pathlib import Path
 
 import torch
