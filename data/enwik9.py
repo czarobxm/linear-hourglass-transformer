@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict
+from typing import Dict, TextIO, Union
 import urllib
 import zipfile
 
@@ -9,13 +9,16 @@ from transformers import PreTrainedTokenizer
 from data.base_dataset import BaseDataset
 
 
+DATA_TYPE = Dict[str, Union[TextIO, int, int]]
+
+
 class Enwik9(BaseDataset):
     name: str = "enwik9"
     website: str = "https://mattmahoney.net/dc/textdata.html"
 
     def __init__(
         self,
-        data: str = "./datastorage/enwik9",
+        data: DATA_TYPE = None,
         tokenizer: PreTrainedTokenizer = None,
         max_length: int = 512,
         shuffle: bool = True,
@@ -30,18 +33,20 @@ class Enwik9(BaseDataset):
         )
 
     def __len__(self):
-        return int(len(self.data) // self.max_length) + 1
+        return int((self.data["end"] - self.data["start"]) // self.max_length) + 1
 
     def __getitem__(self, index):
         if index > len(self):
             raise IndexError("Index out of range")
         # Get shuffled index
-        start_idx = index * self.max_length
-        end_idx = (index + 1) * self.max_length - 1
+        start_idx = self.data["start"] + index * self.max_length
+
+        self.data["file"].seek(start_idx)
+        text = self.data["file"].read(self.max_length)
 
         # Tokenize
         token_dict = self.tokenizer(
-            self.data[start_idx:end_idx],
+            text,
             padding="max_length",
             truncation="longest_first",
             max_length=self.max_length,
@@ -71,14 +76,20 @@ class Enwik9(BaseDataset):
         zip_path.unlink()
 
     @classmethod
-    def load_raw_splits(cls, path: Path, **kwargs) -> Dict[str, str]:
+    def load_raw_splits(cls, path: Path, **kwargs) -> Dict[str, DATA_TYPE]:
         if path is None:
             path = Path("./datastorage/enwik9")
         if not (path / "enwik9").exists():
             cls.download_dataset(path)
-        with open(path / "enwik9", "r", encoding="utf-8") as file:
-            text = file.read()
-        train = text[:90_000_000]
-        val = text[90_000_000:95_000_000]
-        test = text[95_000_000:]
-        return {"train": train, "val": val, "test": test}
+
+        file = open(path / "enwik9", "r", encoding="utf-8")
+
+        train = {"file": file, "start": 0, "end": 90_000_000}
+        val = {"file": file, "start": 90_000_000, "end": 95_000_000}
+        test = {"file": file, "start": 95_000_000, "end": 100_000_000}
+
+        return {
+            "train": train,
+            "val": val,
+            "test": test,
+        }
