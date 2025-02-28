@@ -21,7 +21,9 @@ cs = ConfigStore.instance()
 cs.store(name="experiment", node=Experiment)
 
 
-@hydra.main(version_base=None, config_path="conf/experiments", config_name="config")
+@hydra.main(
+    version_base=None, config_path="conf/experiments", config_name="enwik9_vanilla"
+)
 def main(cfg: Experiment) -> None:
     device = cfg.device
     logger = setup_logging()
