@@ -84,9 +84,9 @@ class Enwik9(BaseDataset):
 
         file = open(path / "enwik9", "r", encoding="utf-8")
 
-        train = {"file": file, "start": 0, "end": 90_000_000}
-        val = {"file": file, "start": 90_000_000, "end": 95_000_000}
-        test = {"file": file, "start": 95_000_000, "end": 100_000_000}
+        train = {"file": file, "start": 0, "end": 900_000_000}
+        val = {"file": file, "start": 900_000_000, "end": 950_000_000}
+        test = {"file": file, "start": 950_000_000, "end": 1_000_000_000}
 
         return {
             "train": train,
