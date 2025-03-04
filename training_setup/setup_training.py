@@ -15,9 +15,9 @@ def setup_training(
     if cfg_training.scheduler:
         scheduler = get_cosine_scheduler_with_warmup(
             optimizer,
-            num_all_steps=num_steps * cfg_training.scheduler.scheduler_steps_fraction,
+            num_all_steps=num_steps,
             num_warmup_steps=num_steps * cfg_training.scheduler.lr_warmup_fraction,
-            final_lr_fraction=num_steps * cfg_training.scheduler.final_lr_fraction,
+            final_lr_fraction=cfg_training.scheduler.final_lr_fraction,
         )
     else:
         scheduler = None
