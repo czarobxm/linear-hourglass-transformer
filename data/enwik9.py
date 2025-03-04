@@ -42,7 +42,7 @@ class Enwik9(BaseDataset):
         start_idx = self.data["start"] + index * self.max_length
 
         self.data["file"].seek(start_idx)
-        text = self.data["file"].read(self.max_length)
+        text = self.data["file"].read(self.max_length).decode("utf-8", errors="ignore")
 
         # Tokenize
         token_dict = self.tokenizer(
@@ -82,7 +82,7 @@ class Enwik9(BaseDataset):
         if not (path / "enwik9").exists():
             cls.download_dataset(path)
 
-        file = open(path / "enwik9", "r", encoding="utf-8")
+        file = open(path / "enwik9", "rb")
 
         train = {"file": file, "start": 0, "end": 900_000_000}
         val = {"file": file, "start": 900_000_000, "end": 950_000_000}
