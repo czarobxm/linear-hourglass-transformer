@@ -36,9 +36,7 @@ class BaseDataset(torch.utils.data.Dataset):
 
     def create_shuffle_order(self, shuffle: bool = True):
         if shuffle:
-            self.shuffled_order = torch.randperm(
-                len(self.data) // self.max_length + 1
-            ).tolist()
+            self.shuffled_order = torch.randperm(len(self)).tolist()
         else:
             self.shuffled_order = torch.arange(len(self)).tolist()
 
