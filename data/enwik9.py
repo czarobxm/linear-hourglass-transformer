@@ -39,6 +39,7 @@ class Enwik9(BaseDataset):
         if index > len(self):
             raise IndexError("Index out of range")
         # Get shuffled index
+        index = self.shuffled_order[index]
         start_idx = self.data["start"] + index * self.max_length
 
         self.data["file"].seek(start_idx)
