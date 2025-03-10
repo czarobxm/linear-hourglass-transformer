@@ -65,7 +65,7 @@ class BaseDataset(torch.utils.data.Dataset):
     @classmethod
     def create_split_datasets(
         cls,
-        split: str = "all",
+        use_validation: bool = False,
         tokenizer: AutoTokenizer = None,
         path: str = None,
         max_length: int = 512,
@@ -74,7 +74,7 @@ class BaseDataset(torch.utils.data.Dataset):
         **kwargs,
     ):
         path = Path(path)
-        splits = cls.load_raw_splits(path=path, **kwargs)
+        splits = cls.load_raw_splits(path=path, use_validation=use_validation, **kwargs)
         all_kwargs = kwargs
         all_kwargs.update(
             dict(
@@ -84,14 +84,11 @@ class BaseDataset(torch.utils.data.Dataset):
                 device=device,
             )
         )
-        if split == "all":
-            return (
-                cls(data=splits["train"], **all_kwargs),
-                cls(data=splits["val"], **all_kwargs),
-                cls(data=splits["test"], **all_kwargs),
-            )
-        else:
-            raise ValueError(f"Invalid value for split argument: {split}")
+        return (
+            cls(data=splits["train"], **all_kwargs),
+            cls(data=splits["val"], **all_kwargs),
+            cls(data=splits["test"], **all_kwargs),
+        )
 
 
 class BaseArtificialDataset(BaseDataset):
@@ -110,7 +107,7 @@ class BaseArtificialDataset(BaseDataset):
     @classmethod
     def create_split_datasets(
         cls,
-        split: str = "all",
+        use_validation: bool = False,
         tokenizer: AutoTokenizer = None,
         path: str = None,
         max_length: int = 512,
@@ -124,7 +121,7 @@ class BaseArtificialDataset(BaseDataset):
             cls.create_artificial_datasets(path, **kwargs)
 
         return super().create_split_datasets(
-            split=split,
+            use_validation=use_validation,
             tokenizer=tokenizer,
             path=path,
             max_length=max_length,

@@ -77,7 +77,9 @@ class Enwik9(BaseDataset):
         zip_path.unlink()
 
     @classmethod
-    def load_raw_splits(cls, path: Path, **kwargs) -> Dict[str, DATA_TYPE]:
+    def load_raw_splits(
+        cls, path: Path, use_validation: bool, **kwargs
+    ) -> Dict[str, DATA_TYPE]:
         if path is None:
             path = Path("./datastorage/enwik9")
         if not (path / "enwik9").exists():
@@ -86,8 +88,12 @@ class Enwik9(BaseDataset):
         file = open(path / "enwik9", "rb")
 
         train = {"file": file, "start": 0, "end": 900_000_000}
-        val = {"file": file, "start": 900_000_000, "end": 950_000_000}
-        test = {"file": file, "start": 950_000_000, "end": 1_000_000_000}
+        if use_validation:
+            val = {"file": file, "start": 900_000_000, "end": 950_000_000}
+            test = {"file": file, "start": 950_000_000, "end": 1_000_000_000}
+        else:
+            val = {"file": file, "start": 0, "end": 0}
+            test = {"file": file, "start": 900_000_000, "end": 1_000_000_000}
 
         return {
             "train": train,

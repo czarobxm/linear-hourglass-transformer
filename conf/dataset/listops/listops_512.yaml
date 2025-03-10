@@ -1,5 +1,4 @@
 _target_: data.listops.ListOps.create_split_datasets
-split: all
 path: datastorage/lra_release 3/listops-1000
 max_length: 512
 shuffle: true
