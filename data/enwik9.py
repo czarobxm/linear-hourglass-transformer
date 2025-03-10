@@ -77,7 +77,7 @@ class Enwik9(BaseDataset):
         zip_path.unlink()
 
     @classmethod
-    def load_raw_splits(
+    def load_raw_splits(  # pylint: disable=arguments-differ
         cls, path: Path, use_validation: bool, **kwargs
     ) -> Dict[str, DATA_TYPE]:
         if path is None:
