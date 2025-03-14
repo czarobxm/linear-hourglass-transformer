@@ -12,10 +12,10 @@ def setup_custom_char_level_tokenizer() -> AutoTokenizer:
     tokenizer.pre_tokenizer = pre_tokenizers.Split("", "isolated")
 
     # Define vocabulary (all letters, numbers, punctuation, and special tokens)
-    vocab_text = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+*/=()[]{}<>:;'\" \n\t"
+    vocab_text = "".join(chr(i) for i in range(256))  # All byte values from 0 to 255
 
     # Define special tokens
-    special_tokens = ["[UNK]", "[PAD]", "[SEP]"]
+    special_tokens = ["[UNK]", "[PAD]", "[SEP]", "[EOS]"]
 
     # Create trainer
     trainer = trainers.WordLevelTrainer(vocab_size=256, special_tokens=special_tokens)
@@ -25,9 +25,10 @@ def setup_custom_char_level_tokenizer() -> AutoTokenizer:
 
     # Add post-processing template
     tokenizer.post_processor = processors.TemplateProcessing(
-        pair="$A [SEP] $B:1",
+        pair="$A [SEP] $B:1 [EOS]",
         special_tokens=[
             ("[SEP]", tokenizer.token_to_id("[SEP]")),
+            ("[EOS]", tokenizer.token_to_id("[EOS]")),
         ],
     )
 
