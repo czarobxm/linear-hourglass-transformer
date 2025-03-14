@@ -21,6 +21,8 @@ def log_batch_neptune(
     total: int,
     n_iter: int,
     lr: float,
+    losses_history: list = None,
+    rolling_window_sizes: list = None,
 ) -> None:
     metrics = {
         f"{stage}_loss": loss,
@@ -28,6 +30,13 @@ def log_batch_neptune(
         "n_iter": n_iter,
         "lr": lr,
     }
+
+    # Log rolling mean losses if history and window sizes are provided
+    if losses_history is not None and rolling_window_sizes is not None:
+        for window_size in rolling_window_sizes:
+            if len(losses_history) >= window_size:
+                rolling_mean = sum(losses_history[-window_size:]) / window_size
+                metrics[f"{stage}_loss_rolling_{window_size}"] = rolling_mean
 
     for key, value in metrics.items():
         run[f"metrics/{key}"].append(value)
@@ -58,9 +67,9 @@ def train_one_batch(
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
 
     # Forward pass
-
     outputs = model(inputs)
     outputs = outputs.view(targets.shape[0], -1)
+
     # Compute loss
     loss = loss_fn(outputs, targets)
 
@@ -86,12 +95,14 @@ def train_one_epoch(
     gradient_accumulation_steps: int,
     run: neptune.Run,
     task: str,
+    rolling_window_sizes: list = None,
     n_iter: int = 0,
 ):
     running_loss = 0
     correct = 0
     total = 0
     accumulated_steps = 0
+    losses_history = []  # To keep track of recent losses
 
     for inputs in tqdm(train_loader, "Training:"):
         # Handle gradient accumulation
@@ -107,6 +118,9 @@ def train_one_epoch(
             inputs, model, optimizer, loss_fn, update_weights, task
         )
 
+        # Store loss in history
+        losses_history.append(loss)
+
         # Step the scheduler
         if scheduler is not None:
             scheduler.step()
@@ -117,6 +131,7 @@ def train_one_epoch(
         correct += cor
         total += tot
         lr = optimizer.param_groups[0]["lr"]
+
         log_batch_neptune(
             stage="train",
             run=run,
@@ -125,10 +140,14 @@ def train_one_epoch(
             total=tot,
             n_iter=n_iter,
             lr=lr,
+            losses_history=losses_history,
+            rolling_window_sizes=rolling_window_sizes,
         )
+
     # Log epoch metrics
     run["metrics/train_epoch_avg_loss"].append(running_loss / len(train_loader))
     run["metrics/train_epoch_accuracy"].append(correct / total)
+
     return n_iter
 
 
@@ -193,15 +212,16 @@ def train(
         logger.info(f"Learning rate: {optimizer.param_groups[0]['lr']}")
         print("train loader length: ", len(train_loader))
         n_iter = train_one_epoch(
-            train_loader,
-            model,
-            optimizer,
-            scheduler,
-            loss_fn,
-            cfg.training.gradient_accumulation_steps,
-            run,
-            cfg.task,
-            n_iter,
+            train_loader=train_loader,
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            loss_fn=loss_fn,
+            gradient_accumulation_steps=cfg.training.gradient_accumulation_steps,
+            run=run,
+            task=cfg.task,
+            rolling_window_sizes=cfg.neptune.rolling_window_sizes,
+            n_iter=n_iter,
         )
 
         if cfg.training.use_validation:
