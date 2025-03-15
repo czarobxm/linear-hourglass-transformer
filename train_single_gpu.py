@@ -13,6 +13,7 @@ from training_setup import (
     initialize_model,
     setup_training,
     setup_tokenizer,
+    setup_random_seed,
 )
 
 
@@ -49,6 +50,10 @@ def main(cfg: ExperimentCfg) -> None:
 
     training_setup = setup_training(cfg.training, model, len(train_loader))
     logging.info("Training setup completed.")
+
+    logging.info("Setting random seed...")
+    setup_random_seed(cfg.seed)
+    logging.info("Random seed set.")
 
     logging.info("Starting training...")
     train(

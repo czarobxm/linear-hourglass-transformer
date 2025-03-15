@@ -15,3 +15,4 @@ class ExperimentCfg:
     dataset: Dict[str, Any]
     neptune: NeptuneCfg
     device: str
+    seed: int

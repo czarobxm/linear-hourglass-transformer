@@ -12,3 +12,4 @@ defaults:
 tokenizer: custom_char_level
 task: classification
 device: cuda
+seed: 42

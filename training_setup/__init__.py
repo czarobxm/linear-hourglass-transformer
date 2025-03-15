@@ -5,3 +5,4 @@ from .setup_logging import setup_logging
 from .setup_neptune import setup_neptune
 from .setup_training import setup_training
 from .setup_tokenizer import setup_tokenizer
+from .setup_random_seed import setup_random_seed

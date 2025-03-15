@@ -12,3 +12,4 @@ defaults:
 tokenizer: custom_char_level
 task: sequence_modelling
 device: cuda
+seed: 42
