@@ -32,4 +32,4 @@ class ModelCfg:
     pos_enc_type: str
     use_embedding: bool
     mha: MultiheadAttentionCfg
-    hourglass: Hourglass
+    hourglass: HourglassCfg
