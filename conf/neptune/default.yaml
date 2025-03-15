@@ -1,11 +1,11 @@
 project_name: ./.neptune_project_name
 api_token: ./.neptune_api_token
 rolling_window_sizes: 
-  - 250
-  - 500
   - 1000
+  - 2500
+  - 5000
 smoothing_factors:
+  - 0.0005
   - 0.005
   - 0.01
-  - 0.02
 
