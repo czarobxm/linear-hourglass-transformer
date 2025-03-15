@@ -23,6 +23,8 @@ def log_batch_neptune(
     lr: float,
     losses_history: list = None,
     rolling_window_sizes: list = None,
+    running_avgs: list = None,
+    smoothing_factors: list = None,
 ) -> None:
     metrics = {
         f"{stage}_loss": loss,
@@ -30,6 +32,12 @@ def log_batch_neptune(
         "n_iter": n_iter,
         "lr": lr,
     }
+
+    # Log running average losses with different smoothing factors
+    if running_avgs is not None and smoothing_factors is not None:
+        for i, factor in enumerate(smoothing_factors):
+            factor_key = str(factor).replace(".", "_")
+            metrics[f"{stage}_running_avg_loss_{factor_key}"] = running_avgs[i]
 
     # Log rolling mean losses if history and window sizes are provided
     if losses_history is not None and rolling_window_sizes is not None:
@@ -96,13 +104,35 @@ def train_one_epoch(
     run: neptune.Run,
     task: str,
     rolling_window_sizes: list = None,
+    smoothing_factors: list = None,  # List of smoothing factors
     n_iter: int = 0,
+    prev_running_avgs: list = None,  # Previous running averages from last epoch
+    prev_losses_history: list = None,  # Previous losses history from last epoch
+    max_history_size: int = None,  # Maximum size to keep in losses history
 ):
     running_loss = 0
     correct = 0
     total = 0
     accumulated_steps = 0
-    losses_history = []  # To keep track of recent losses
+
+    # Initialize losses history with previous values or create new one
+    if prev_losses_history is not None:
+        losses_history = prev_losses_history.copy()
+    else:
+        losses_history = []
+
+    # Trim history if needed
+    if max_history_size is not None and len(losses_history) > max_history_size:
+        losses_history = losses_history[-max_history_size:]
+
+    # Initialize running averages with previous values or create new ones
+    running_avgs = None
+    if smoothing_factors:
+        if prev_running_avgs is None or len(prev_running_avgs) != len(smoothing_factors):
+            # Initialize with None values if not provided or length mismatch
+            running_avgs = [None] * len(smoothing_factors)
+        else:
+            running_avgs = prev_running_avgs.copy()
 
     for inputs in tqdm(train_loader, "Training:"):
         # Handle gradient accumulation
@@ -120,6 +150,18 @@ def train_one_epoch(
 
         # Store loss in history
         losses_history.append(loss)
+
+        # Trim history if needed
+        if max_history_size is not None and len(losses_history) > max_history_size:
+            losses_history = losses_history[-max_history_size:]
+
+        # Update running averages with different smoothing factors
+        if smoothing_factors and running_avgs:
+            for i, factor in enumerate(smoothing_factors):
+                if running_avgs[i] is None:
+                    running_avgs[i] = loss
+                else:
+                    running_avgs[i] = factor * loss + (1 - factor) * running_avgs[i]
 
         # Step the scheduler
         if scheduler is not None:
@@ -142,13 +184,15 @@ def train_one_epoch(
             lr=lr,
             losses_history=losses_history,
             rolling_window_sizes=rolling_window_sizes,
+            running_avgs=running_avgs,
+            smoothing_factors=smoothing_factors,
         )
 
     # Log epoch metrics
     run["metrics/train_epoch_avg_loss"].append(running_loss / len(train_loader))
     run["metrics/train_epoch_accuracy"].append(correct / total)
 
-    return n_iter
+    return n_iter, running_avgs, losses_history
 
 
 def evaluate_one_batch(
@@ -206,12 +250,26 @@ def train(
 ) -> None:
     run["config"] = OmegaConf.to_container(cfg)  # Save the config to Neptune
 
+    # Initialize tracking variables
     n_iter = 0
+    running_avgs = None
+    losses_history = None
+
+    # Determine max history size if rolling window sizes are specified
+    max_history_size = (
+        max(cfg.neptune.rolling_window_sizes)
+        if hasattr(cfg.neptune, "rolling_window_sizes")
+        and cfg.neptune.rolling_window_sizes
+        else None
+    )
+
     for epoch in range(cfg.training.epochs):
         logger.info(f"Epoch {epoch+1}/{cfg.training.epochs}")
         logger.info(f"Learning rate: {optimizer.param_groups[0]['lr']}")
         print("train loader length: ", len(train_loader))
-        n_iter = train_one_epoch(
+
+        # Updated call to train_one_epoch with new parameters
+        n_iter, running_avgs, losses_history = train_one_epoch(
             train_loader=train_loader,
             model=model,
             optimizer=optimizer,
@@ -220,16 +278,27 @@ def train(
             gradient_accumulation_steps=cfg.training.gradient_accumulation_steps,
             run=run,
             task=cfg.task,
-            rolling_window_sizes=cfg.neptune.rolling_window_sizes,
+            rolling_window_sizes=(
+                cfg.neptune.rolling_window_sizes
+                if hasattr(cfg.neptune, "rolling_window_sizes")
+                else None
+            ),
+            smoothing_factors=(
+                cfg.neptune.smoothing_factors
+                if hasattr(cfg.neptune, "smoothing_factors")
+                else None
+            ),
             n_iter=n_iter,
+            prev_running_avgs=running_avgs,
+            prev_losses_history=losses_history,
+            max_history_size=max_history_size,
         )
 
         if cfg.training.use_validation:
             evaluate_one_epoch(val_loader, model, loss_fn, run, cfg.task, "val")
 
         save_model(model, run, epoch)
-
-    evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
+        evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
 
 
 def save_model(model: BaseModel, run: neptune.Run, epoch: int) -> None:
