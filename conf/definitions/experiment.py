@@ -7,7 +7,7 @@ from conf.definitions.training import TrainingCfg
 
 
 @dataclass
-class Experiment:
+class ExperimentCfg:
     task: str
     model: ModelCfg
     training: TrainingCfg

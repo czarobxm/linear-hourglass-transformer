@@ -4,7 +4,7 @@ import hydra
 from hydra.core.config_store import ConfigStore
 from transformers import AutoTokenizer
 
-from conf.definitions import Experiment
+from conf.definitions import ExperimentCfg
 from training_func import train
 from training_setup import (
     setup_logging,
@@ -18,13 +18,13 @@ from training_setup import (
 
 # Registering the Config class with the name 'config'.
 cs = ConfigStore.instance()
-cs.store(name="experiment", node=Experiment)
+cs.store(name="experiment", node=ExperimentCfg)
 
 
 @hydra.main(
     version_base=None, config_path="conf/experiments", config_name="enwik9_vanilla_8x4096"
 )
-def main(cfg: Experiment) -> None:
+def main(cfg: ExperimentCfg) -> None:
     device = cfg.device
 
     logger = setup_logging()

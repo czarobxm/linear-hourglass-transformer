@@ -10,7 +10,7 @@ from omegaconf import OmegaConf
 from tqdm import tqdm
 
 from models.base import BaseModel
-from conf.definitions import Experiment
+from conf.definitions import ExperimentCfg
 
 
 def log_batch_neptune(
@@ -237,7 +237,7 @@ def evaluate_one_epoch(
 
 
 def train(
-    cfg: Experiment,
+    cfg: ExperimentCfg,
     model: BaseModel,
     optimizer: torch.optim.Optimizer,
     scheduler: torch.optim.lr_scheduler.LRScheduler,

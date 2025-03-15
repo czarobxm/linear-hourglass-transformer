@@ -14,7 +14,7 @@ class MultiheadAttentionCfg:
 
 
 @dataclass
-class Hourglass:
+class HourglassCfg:
     downsampling_type: str
     upsampling_type: str
     attention_downsampling: bool
