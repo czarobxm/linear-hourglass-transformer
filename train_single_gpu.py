@@ -41,6 +41,7 @@ def main(cfg: ExperimentCfg) -> None:
     )
     logging.info("Data loaders created.")
 
+    logging.info("Initializing Neptune run...")
     run = setup_neptune(cfg.neptune)
     logging.info("Neptune run initialized.")
 
