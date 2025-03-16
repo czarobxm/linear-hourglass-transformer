@@ -1,4 +1,5 @@
 import logging
+import os
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -16,6 +17,7 @@ from training_setup import (
     setup_random_seed,
 )
 
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 # Registering the Config class with the name 'config'.
 cs = ConfigStore.instance()
