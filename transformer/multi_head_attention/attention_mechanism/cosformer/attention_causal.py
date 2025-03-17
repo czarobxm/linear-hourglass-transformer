@@ -84,14 +84,7 @@ def attention_causal_cuda(
         Dh: Dimension of each head
     """
     # Compute the normalizers: [B, Nh, L, 2 * Dh], [B, Nh, L, 2 * Dh] -> [B, Nh, L]
-    if torch.are_deterministic_algorithms_enabled():
-        indices = torch.arange(key.size(2), device=key.device).float()
-        mask = (indices[:, None] >= indices[None, :]).float()
-        mask = mask.unsqueeze(0).unsqueeze(0)
-        cumsum_result = torch.einsum("bnij,bnjd->bnid", mask, key)
-        denom = 1 / (torch.einsum("bnld,bnld->bnl", query, cumsum_result) + eps)
-    else:
-        denom = 1 / (torch.einsum("bnld,bnld->bnl", query, key.cumsum(2)) + eps)
+    denom = 1 / (torch.einsum("bnld,bnld->bnl", query, key.cumsum(2)) + eps)
 
     # Compute the unnormalized result: [B, Nh, L, 2 * Dh], [B, Nh, L, 2 * Dh], [B, Nh, L, Dh] -> [B, Nh, L, Dh]
     kv_context = causal_dot_product(
