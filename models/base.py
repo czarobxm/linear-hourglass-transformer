@@ -34,6 +34,7 @@ class BaseModel(nn.Module):
         vocab_size: int,
         structure: str,
         num_heads: int,
+        num_classes: int,
         method_params: Dict[str, Any],
         apply_rotary_pos_enc: bool,
         dropout: float,
@@ -56,6 +57,7 @@ class BaseModel(nn.Module):
         self.vocab_size = vocab_size
         self.structure = structure
         self.num_heads = num_heads
+        self.num_classes = num_classes
         self.method_params = method_params
         self.apply_rotary_pos_enc = apply_rotary_pos_enc
         self.dropout = dropout
@@ -96,6 +98,7 @@ class BaseModel(nn.Module):
             vocab_size=vocab_size,
             structure=cfg_model.structure,
             num_heads=cfg_model.mha.num_heads,
+            num_classes=cfg_model.num_classes,
             method_params=cfg_model.mha.method_params,
             apply_rotary_pos_enc=cfg_model.mha.apply_rotary_pos_enc,
             dropout=cfg_model.mha.dropout,

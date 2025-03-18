@@ -38,7 +38,7 @@ class ClassifierTransformer(BaseModel):
             self.decoder_block = HourglassBlock(**kwargs)
 
         # Classifier
-        self.classifier = nn.Linear(self.d_model, 1)
+        self.classifier = nn.Linear(self.d_model, self.num_classes)
 
         # Device
         self.to(self.device)
@@ -58,4 +58,7 @@ class ClassifierTransformer(BaseModel):
         x = self.classifier(x)
         # Mean
         x = x.mean(dim=1)
+        # softmax if num_classes > 1
+        if self.num_classes > 1:
+            x = torch.softmax(x, dim=-1)
         return x

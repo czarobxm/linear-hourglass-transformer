@@ -33,3 +33,4 @@ class ModelCfg:
     use_embedding: bool
     mha: MultiheadAttentionCfg
     hourglass: HourglassCfg
+    num_classes: int = 1
