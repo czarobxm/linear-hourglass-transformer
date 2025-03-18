@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import torch
 import pandas as pd
 from transformers import PreTrainedTokenizer
 
@@ -41,7 +42,12 @@ class ListOps(BaseDataset):
         ).to(self.device)
         return (
             token_dict["input_ids"].squeeze(0).to(self.device),
-            self.data["label"][index].to(self.device),
+            torch.nn.functional.one_hot(  # pylint: disable=not-callable
+                torch.tensor(
+                    self.data["label"][index], device=self.device, dtype=torch.long
+                ),
+                num_classes=10,
+            ),
         )
 
     @classmethod
