@@ -3,16 +3,16 @@ hydra:
     - file://conf
 
 defaults:
-  - model: sequence_modelling_cosformer_8x4096
+  - model: classification_cosformer_8x4096
   - training: default
   - neptune: default
   - dataset: listops/listops_4096
   - _self_
 
 tokenizer: custom_char_level
-task: sequence_modelling
+task: classification
 device: cuda
 seed: 47
 
-training:
+model:
   num_classes: 10
