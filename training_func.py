@@ -254,6 +254,7 @@ def train(
     n_iter = 0
     running_avgs = None
     losses_history = None
+    best_val_loss = float("inf")
 
     # Determine max history size if rolling window sizes are specified
     max_history_size = (
@@ -295,13 +296,31 @@ def train(
         )
 
         if cfg.training.use_validation:
+            val_loss = evaluate_one_epoch(
+                val_loader, model, loss_fn, run, cfg.task, "val"
+            )
+            save_model(model, run, epoch)
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                save_model(model, run, epoch, best=True)
             evaluate_one_epoch(val_loader, model, loss_fn, run, cfg.task, "val")
 
         save_model(model, run, epoch)
-        evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
+    if cfg.training.use_validation:
+        # load model with best validation loss
+        model.load_state_dict(
+            torch.load(f"models_checkpoints/{run['sys/id'].fetch()}/best.pth")
+        )
+
+    evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
 
 
-def save_model(model: BaseModel, run: neptune.Run, epoch: int) -> None:
+def save_model(
+    model: BaseModel, run: neptune.Run, epoch: int, best: bool = False
+) -> None:
     path = Path(f"models_checkpoints/{run['sys/id'].fetch()}")
     path.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), path / f"epoch-{epoch}.pth")
+    if best:
+        torch.save(model.state_dict(), path / "best.pth")
+    else:
+        torch.save(model.state_dict(), path / f"epoch-{epoch}.pth")
