@@ -13,3 +13,6 @@ tokenizer: custom_char_level
 task: sequence_modelling
 device: cuda
 seed: 47
+
+training:
+  num_classes: 10
