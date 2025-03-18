@@ -1,0 +1,15 @@
+hydra:
+  searchpath:
+    - file://conf
+
+defaults:
+  - model: classification_vanilla_2x4096,4x2048,2x4096
+  - training: default
+  - neptune: default
+  - dataset: imdb/imdb_4096
+  - _self_
+
+tokenizer: custom_char_level
+task: classification
+device: cuda
+seed: 47
