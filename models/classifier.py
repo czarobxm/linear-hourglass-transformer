@@ -58,7 +58,4 @@ class ClassifierTransformer(BaseModel):
         x = self.classifier(x)
         # Mean
         x = x.mean(dim=1)
-        # softmax if num_classes > 1
-        if self.num_classes > 1:
-            x = torch.softmax(x, dim=-1)
         return x
