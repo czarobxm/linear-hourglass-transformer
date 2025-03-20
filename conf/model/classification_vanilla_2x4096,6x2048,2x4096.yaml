@@ -6,4 +6,4 @@ type: classification
 structure: 2x4096,4x2048,2x4096
 pos_enc_type: learnable
 use_embedding: true
-num_classes: 1
+num_classes: 2
