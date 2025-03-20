@@ -45,12 +45,7 @@ class IMDB(BaseDataset):
 
         return (
             token_dict["input_ids"].squeeze(0).to(self.device),
-            torch.nn.functional.one_hot(  # pylint: disable=not-callable
-                torch.tensor(
-                    self.data["label"][index], device=self.device, dtype=torch.long
-                ),
-                num_classes=2,
-            ),
+            torch.tensor(self.data["label"][index], device=self.device, dtype=torch.long),
         )
 
     @classmethod
