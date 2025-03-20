@@ -31,6 +31,9 @@ class IMDB(BaseDataset):
         return len(self.data["text"])
 
     def __getitem__(self, index: int):
+        # Shuffle index
+        index = self.shuffled_order[index]
+
         # Tokenize
         token_dict = self.tokenizer(
             self.data["text"][index],
