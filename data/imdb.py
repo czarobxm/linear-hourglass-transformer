@@ -71,7 +71,7 @@ class IMDB(BaseDataset):
             "stanfordnlp/imdb", cache_dir=path, split="test", resume_download=None
         )
         return {
-            "train": {"text": train["text"], "label": train["label"]},
-            "val": {"text": test["text"], "label": test["label"]},
+            "train": {"text": train["text"][:20_000], "label": train["label"][:20_000]},
+            "val": {"text": train["text"][20_000:], "label": train["label"][20_000:]},
             "test": {"text": test["text"], "label": test["label"]},
         }
