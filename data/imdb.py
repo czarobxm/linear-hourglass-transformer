@@ -72,6 +72,6 @@ class IMDB(BaseDataset):
         )
         return {
             "train": {"text": train["text"], "label": train["label"]},
-            "val": {"text": test["text"][:12500], "label": test["label"][:12500]},
-            "test": {"text": test["text"][12500:], "label": test["label"][12500:]},
+            "val": {"text": test["text"], "label": test["label"]},
+            "test": {"text": test["text"], "label": test["label"]},
         }

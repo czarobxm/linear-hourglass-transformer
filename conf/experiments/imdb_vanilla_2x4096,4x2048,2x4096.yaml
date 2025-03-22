@@ -4,7 +4,7 @@ hydra:
 
 defaults:
   - model: classification_vanilla_2x4096,4x2048,2x4096
-  - training: default_5_epochs
+  - training: default_3_epochs
   - neptune: default
   - dataset: imdb/imdb_4096
   - _self_
