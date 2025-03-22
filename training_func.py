@@ -79,9 +79,7 @@ def train_one_batch(
     outputs = outputs.view(targets.shape[0], -1)
 
     # Compute loss
-    print("outputs: ", outputs, "targets: ", targets)
     loss = loss_fn(outputs, targets)
-    print("loss: ", loss)
 
     # Backward pass
     loss.backward()
