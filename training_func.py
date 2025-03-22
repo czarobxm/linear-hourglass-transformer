@@ -303,7 +303,6 @@ def train(
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 save_model(model, run, epoch, best=True)
-            evaluate_one_epoch(val_loader, model, loss_fn, run, cfg.task, "val")
 
         save_model(model, run, epoch)
     if cfg.training.use_validation:
