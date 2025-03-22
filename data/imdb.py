@@ -70,6 +70,9 @@ class IMDB(BaseDataset):
         test = load_dataset(
             "stanfordnlp/imdb", cache_dir=path, split="test", resume_download=None
         )
+        train = train.shuffle(
+            seed=42
+        )  # shuffle the dataset, so that the validation set is not biased
         return {
             "train": {"text": train["text"][:20_000], "label": train["label"][:20_000]},
             "val": {"text": train["text"][20_000:], "label": train["label"][20_000:]},
