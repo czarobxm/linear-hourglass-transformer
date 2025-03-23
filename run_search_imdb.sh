@@ -30,6 +30,12 @@ sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry ru
 sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_2x4096,2x2048,2x4096 training.optimizer.lr=0.001
 sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_2x4096,2x2048,2x4096 training.optimizer.lr=0.002
 
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,4x2048,1x4096 training.optimizer.lr=0.0001
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,4x2048,1x4096 training.optimizer.lr=0.0002
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,4x2048,1x4096 training.optimizer.lr=0.0005
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,4x2048,1x4096 training.optimizer.lr=0.001
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,4x2048,1x4096 training.optimizer.lr=0.002
+
 sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_6x4096 training.optimizer.lr=0.0001
 sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_6x4096 training.optimizer.lr=0.0002
 sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_6x4096 training.optimizer.lr=0.0005
@@ -48,27 +54,8 @@ sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry ru
 sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_2x4096,2x2048,2x4096 training.optimizer.lr=0.001
 sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_2x4096,2x2048,2x4096 training.optimizer.lr=0.002
 
-# 4 layers
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,2x2048,1x4096 training.optimizer.lr=0.0001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,2x2048,1x4096 training.optimizer.lr=0.0002
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,2x2048,1x4096 training.optimizer.lr=0.0005
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,2x2048,1x4096 training.optimizer.lr=0.001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_1x4096,2x2048,1x4096 training.optimizer.lr=0.002
-
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_4x4096 training.optimizer.lr=0.0001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_4x4096 training.optimizer.lr=0.0002
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_4x4096 training.optimizer.lr=0.0005
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_4x4096 training.optimizer.lr=0.001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_cosformer_4x4096 training.optimizer.lr=0.002
-
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_4x4096 training.optimizer.lr=0.0001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_4x4096 training.optimizer.lr=0.0002
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_4x4096 training.optimizer.lr=0.0005
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_4x4096 training.optimizer.lr=0.001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_4x4096 training.optimizer.lr=0.002
-
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,2x2048,1x4096 training.optimizer.lr=0.0001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,2x2048,1x4096 training.optimizer.lr=0.0002
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,2x2048,1x4096 training.optimizer.lr=0.0005
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,2x2048,1x4096 training.optimizer.lr=0.001
-sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,2x2048,1x4096 training.optimizer.lr=0.002
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,4x2048,1x4096 training.optimizer.lr=0.0001
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,4x2048,1x4096 training.optimizer.lr=0.0002
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,4x2048,1x4096 training.optimizer.lr=0.0005
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,4x2048,1x4096 training.optimizer.lr=0.001
+sbatch --partition=common --qos=czarekg_common --gres=gpu:1 --time=1-0 poetry run python3 train_single_gpu.py --config-name=imdb_vanilla_1x4096,4x2048,1x4096 training.optimizer.lr=0.002
