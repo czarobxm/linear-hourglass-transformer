@@ -3,16 +3,13 @@ hydra:
     - file://conf
 
 defaults:
-  - model: classification_cosformer_2x4096,4x2048,2x4096
+  - model: classification_vanilla_4x4096
   - training: default_5_epochs
   - neptune: default
-  - dataset: listops/listops_4096
+  - dataset: imdb/imdb_4096
   - _self_
 
 tokenizer: custom_char_level
 task: classification
 device: cuda
 seed: 47
-
-model:
-  num_classes: 10
