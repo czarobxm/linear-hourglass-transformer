@@ -63,7 +63,7 @@ class Enwik9(BaseDataset):
         path.mkdir(exist_ok=True, parents=True)
 
         # Download
-        if not (path / "enwik9").exists():
+        if not (path / "enwik9.zip").exists():
             urllib.request.urlretrieve(
                 "http://mattmahoney.net/dc/enwik9.zip", path / "enwik9.zip"
             )
