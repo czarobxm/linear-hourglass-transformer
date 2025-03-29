@@ -34,10 +34,8 @@ class Cifar10(BaseDataset):
 
     def __getitem__(self, index):
         return (
-            self._prepare_image(self.data["image"][index]).to(self.device),
-            torch.tensor(
-                [self.data["label"][index]], device=self.device, dtype=torch.long
-            ),
+            self._prepare_image(self.data["image"][index]).to(torch.long).to(self.device),
+            torch.tensor(self.data["label"][index], device=self.device, dtype=torch.long),
         )
 
     def show_img(self, index) -> None:
