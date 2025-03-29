@@ -1,0 +1,9 @@
+defaults:
+  - mha: cosformer
+  - hourglass: default
+
+type: classification
+structure: 6x1024
+pos_enc_type: learnable
+use_embedding: true
+num_classes: 2
