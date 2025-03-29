@@ -8,11 +8,10 @@ def download_lra(path: Path):
         return None
     path.mkdir(exist_ok=True, parents=True)
 
-    lra_path = path / "lra_release 3"
     zip_path = path / "lra_release.gz"
 
     # Download
-    if not lra_path.exists():
+    if not zip_path.exists():
         urllib.request.urlretrieve(
             "https://storage.googleapis.com/long-range-arena/lra_release.gz", zip_path
         )
@@ -20,7 +19,7 @@ def download_lra(path: Path):
     # Unpack file
     with tarfile.open(zip_path, "r:gz") as tar:
         for member in tar.getmembers():
-            tar.extract(member, path=lra_path, filter="data")
+            tar.extract(member, path=path, filter="data")
 
     # Remove zip file
     zip_path.unlink()
