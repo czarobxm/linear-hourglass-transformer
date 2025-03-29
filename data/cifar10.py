@@ -45,8 +45,9 @@ class Cifar10(BaseDataset):
 
     @staticmethod
     def _prepare_image(img):
+        img = img.convert("L")
         img = torchvision.transforms.functional.pil_to_tensor(img) / 255.0
-        img = img.transpose(1, 2).flatten(2)
+        img = img.transpose(1, 2).flatten()
         return img
 
     @classmethod
