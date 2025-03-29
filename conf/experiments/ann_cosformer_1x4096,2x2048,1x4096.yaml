@@ -6,7 +6,7 @@ defaults:
   - model: classification_cosformer_1x4096,2x2048,1x4096
   - training: default_5_epochs
   - neptune: default
-  - dataset: imdb/imdb_4096
+  - dataset: ann/ann_4096
   - _self_
 
 tokenizer: custom_char_level
