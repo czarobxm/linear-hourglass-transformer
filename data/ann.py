@@ -17,10 +17,10 @@ class ANN(BaseDataset):
         self,
         data: str,
         tokenizer: PreTrainedTokenizer,
-        max_length: int = 512,
+        max_length: int = 4096,
         shuffle: bool = True,
         separator_token: str = " [SEP] ",
-        tokens_per_text: int = 512,
+        tokens_per_text: int = 2045,
         device: str = "cpu",
     ) -> None:
         super().__init__(
@@ -54,7 +54,7 @@ class ANN(BaseDataset):
 
         return (
             token_dict["input_ids"].squeeze(0).to(self.device),
-            torch.Tensor([self.data["label"][index]], device=self.device),
+            torch.tensor(self.data["label"][index], dtype=torch.long, device=self.device),
         )
 
     @classmethod
