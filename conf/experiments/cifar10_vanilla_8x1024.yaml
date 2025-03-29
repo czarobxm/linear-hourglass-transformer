@@ -1,0 +1,18 @@
+hydra:
+  searchpath:
+    - file://conf
+
+defaults:
+  - model: classification_vanilla_8x1024
+  - training: default_5_epochs
+  - neptune: default
+  - dataset: cifar10/cifar10_1024
+  - _self_
+
+tokenizer: custom_char_level
+task: classification
+device: cuda
+seed: 47
+
+model:
+  num_classes: 10
