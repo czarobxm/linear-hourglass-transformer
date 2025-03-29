@@ -1,0 +1,5 @@
+_target_: data.pathfinder.Pathfinder.create_split_datasets
+use_validation: true
+path: ./datastorage/lra_release 3/lra_release/pathfinder32/curv_baseline
+max_length: 1024
+shuffle: true
