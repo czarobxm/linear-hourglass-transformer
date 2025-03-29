@@ -4,7 +4,7 @@ import torch
 import pandas as pd
 from transformers import PreTrainedTokenizer
 import torchvision
-from torchvision import transforms
+import torchvision
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -34,12 +34,12 @@ class Pathfinder(BaseDataset):
         )
 
     def __len__(self) -> int:
-        return len(self.data["text"])
+        return len(self.data["label"])
 
     def _load_img(self, index):
         return Image.open(
             self.data["path_base"] / self.data["path_suffix"][index]
-        ).convert("RGB")
+        ).convert("L")
 
     def show_img(self, index) -> None:
         """Show random image from dataset"""
@@ -47,11 +47,9 @@ class Pathfinder(BaseDataset):
         plt.imshow(img.permute(1, 2, 0).int())
 
     def __getitem__(self, index):
-        image = self._load_img(index)
-        transform = transforms.ToTensor()
-        image_tensor = transform(image)
-        return image_tensor.to(self.device), torch.Tensor(
-            [self.data["label"][index]], device=self.device
+        img = torchvision.transforms.functional.pil_to_tensor(self._load_img(index))
+        return img.to(torch.long).to(self.device).flatten(), torch.tensor(
+            [self.data["label"][index]], device=self.device, dtype=torch.long
         )
 
     @classmethod
