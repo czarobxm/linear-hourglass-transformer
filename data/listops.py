@@ -32,6 +32,7 @@ class ListOps(BaseDataset):
         return len(self.data["text"])
 
     def __getitem__(self, index: int):
+        index = self.shuffled_order[index]
         # Tokenize
         token_dict = self.tokenizer(
             self.data["text"][index],
@@ -55,7 +56,7 @@ class ListOps(BaseDataset):
     @classmethod
     def load_raw_splits(cls, path: str, **kwargs):
         if path is None:
-            path = Path("./datastorage/lra_release 3/listops-1000")
+            path = Path("./datastorage/lra_release/listops-1000")
 
         train = pd.read_csv(
             f"{path}/basic_train.tsv",
