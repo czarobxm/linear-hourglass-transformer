@@ -1,0 +1,15 @@
+hydra:
+  searchpath:
+    - file://conf
+
+defaults:
+  - model: classification_vanilla_2x1024,2x512,2x1024
+  - training: default_5_epochs
+  - neptune: default
+  - dataset: pathfinder/pathfinder_1024
+  - _self_
+
+tokenizer: custom_char_level
+task: classification
+device: cuda
+seed: 47
