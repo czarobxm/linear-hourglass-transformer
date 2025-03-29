@@ -1,0 +1,5 @@
+_target_: data.ann.ANN.create_split_datasets
+path: ./datastorage/lra_release 3/lra_release/tsv_data
+max_length: 4096
+tokens_per_text: 2045
+shuffle: true
