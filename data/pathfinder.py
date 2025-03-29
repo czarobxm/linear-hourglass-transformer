@@ -4,7 +4,6 @@ import torch
 import pandas as pd
 from transformers import PreTrainedTokenizer
 import torchvision
-import torchvision
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -49,7 +48,7 @@ class Pathfinder(BaseDataset):
     def __getitem__(self, index):
         img = torchvision.transforms.functional.pil_to_tensor(self._load_img(index))
         return img.to(torch.long).to(self.device).flatten(), torch.tensor(
-            [self.data["label"][index]], device=self.device, dtype=torch.long
+            self.data["label"][index], device=self.device, dtype=torch.long
         )
 
     @classmethod
@@ -75,7 +74,7 @@ class Pathfinder(BaseDataset):
             df = pd.read_csv(path / "metadata" / file.name, sep=" ", header=None)
             path_to_images_single_file = df[0] + "/" + df[1]
             paths_to_images.extend(path_to_images_single_file.tolist())
-            labels.extend(df[2].tolist())
+            labels.extend(df[3].tolist())
 
         return {
             "train": {
