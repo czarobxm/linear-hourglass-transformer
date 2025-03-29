@@ -1,0 +1,5 @@
+_target_: data.cifar10.Cifar10.create_split_datasets
+use_validation: true
+path: ./datastorage/cifar10
+max_length: 1024
+shuffle: true
