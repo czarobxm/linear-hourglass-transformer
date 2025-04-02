@@ -4,6 +4,60 @@ from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from tokenizers import Tokenizer, models, pre_tokenizers, trainers, processors
 
 
+def setup_listops_tokenizer() -> PreTrainedTokenizerFast:
+    # Define the ListOps vocabulary explicitly
+    operators = ["[MAX", "[MIN", "[MED", "[SM"]
+    operands = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    structural = ["(", ")", "]"]
+
+    # Combine all tokens to create the vocabulary
+    vocab = operators + operands + structural
+
+    # Define special tokens
+    special_tokens = ["[UNK]", "[PAD]", "[SEP]", "[EOS]"]
+
+    # Create WordLevel tokenizer with an unknown token
+    tokenizer = Tokenizer(models.WordLevel(unk_token="[UNK]"))
+
+    # Use whitespace pre-tokenizer instead of character-level
+    # This is more appropriate for ListOps as the tokens are distinct symbols
+    tokenizer.pre_tokenizer = pre_tokenizers.WhitespaceSplit()
+
+    # Create trainer with our specific vocabulary
+    trainer = trainers.WordLevelTrainer(
+        vocab_size=len(vocab) + len(special_tokens), special_tokens=special_tokens
+    )
+
+    # Train tokenizer on our custom vocabulary
+    # Convert the list to a space-separated string for the trainer
+    vocab_text = " ".join(vocab)
+    tokenizer.train_from_iterator([vocab_text], trainer=trainer)
+
+    # Add post-processing template
+    tokenizer.post_processor = processors.TemplateProcessing(
+        single="$A [EOS]",
+        pair="$A [SEP] $B [EOS]",
+        special_tokens=[
+            ("[SEP]", tokenizer.token_to_id("[SEP]")),
+            ("[EOS]", tokenizer.token_to_id("[EOS]")),
+        ],
+    )
+
+    # Enable padding
+    tokenizer.enable_padding(pad_id=tokenizer.token_to_id("[PAD]"), pad_token="[PAD]")
+
+    # Create the fast tokenizer
+    fast_tokenizer = PreTrainedTokenizerFast(
+        tokenizer_object=tokenizer,
+        unk_token="[UNK]",
+        pad_token="[PAD]",
+        sep_token="[SEP]",
+        eos_token="[EOS]",
+    )
+
+    return fast_tokenizer
+
+
 def setup_custom_char_level_tokenizer() -> AutoTokenizer:
     # Create WordLevel tokenizer with an unknown token
     tokenizer = Tokenizer(models.WordLevel(unk_token="[UNK]"))
