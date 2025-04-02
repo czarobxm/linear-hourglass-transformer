@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 import torch
 import pandas as pd
@@ -6,6 +7,16 @@ from transformers import PreTrainedTokenizer
 
 from data.base_dataset import BaseDataset
 from data.utils import download_lra
+
+
+def normalize_spaces(s: str) -> str:
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def clean_listop_text(text: str) -> str:
+    text = text.replace("(", "").replace(")", "")
+    text = normalize_spaces(text)
+    return text
 
 
 class ListOps(BaseDataset):
@@ -33,9 +44,13 @@ class ListOps(BaseDataset):
 
     def __getitem__(self, index: int):
         index = self.shuffled_order[index]
+
+        # Clean text
+        clean_text = clean_listop_text(self.data["text"][index])
+
         # Tokenize
         token_dict = self.tokenizer(
-            self.data["text"][index],
+            clean_text,
             padding="max_length",
             truncation="longest_first",
             max_length=self.max_length,
