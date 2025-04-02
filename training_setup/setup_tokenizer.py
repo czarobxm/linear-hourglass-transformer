@@ -8,7 +8,7 @@ def setup_listops_tokenizer() -> PreTrainedTokenizerFast:
     # Define the ListOps vocabulary explicitly
     operators = ["[MAX", "[MIN", "[MED", "[SM"]
     operands = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    structural = ["(", ")", "]"]
+    structural = ["]"]
 
     # Combine all tokens to create the vocabulary
     vocab = operators + operands + structural
