@@ -109,6 +109,8 @@ SPECIAL_TOKENS_DICT = {
 def setup_tokenizer(cfg_tokenizer: str) -> AutoTokenizer:
     if cfg_tokenizer == "custom_char_level":
         return setup_custom_char_level_tokenizer()
+    elif cfg_tokenizer == "listops":
+        return setup_listops_tokenizer()
     elif cfg_tokenizer == "none":
         return None
 
