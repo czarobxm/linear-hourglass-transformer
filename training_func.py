@@ -313,6 +313,8 @@ def train(
 
     evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
 
+    delete_model_checkpoints(run)
+
 
 def save_model(
     model: BaseModel, run: neptune.Run, epoch: int, best: bool = False
@@ -323,3 +325,11 @@ def save_model(
         torch.save(model.state_dict(), path / "best.pth")
     else:
         torch.save(model.state_dict(), path / f"epoch-{epoch}.pth")
+
+
+def delete_model_checkpoints(run: neptune.Run) -> None:
+    path = Path(f"models_checkpoints/{run['sys/id'].fetch()}")
+    if path.exists():
+        for file in path.iterdir():
+            file.unlink()
+        path.rmdir()
