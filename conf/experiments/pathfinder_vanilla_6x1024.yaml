@@ -4,7 +4,7 @@ hydra:
 
 defaults:
   - model: classification_vanilla_6x1024
-  - training: default_5_epochs
+  - training: default_2_epochs
   - neptune: default
   - dataset: pathfinder/pathfinder_1024
   - _self_
