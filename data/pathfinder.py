@@ -36,17 +36,24 @@ class Pathfinder(BaseDataset):
         return len(self.data["label"])
 
     def _load_img(self, index):
-        return Image.open(
-            self.data["path_base"] / self.data["path_suffix"][index]
-        ).convert("L")
+        try:
+            pil_img = Image.open(
+                self.data["path_base"] / self.data["path_suffix"][index]
+            ).convert("L")
+            img = torchvision.transforms.functional.pil_to_tensor(pil_img)
+        except FileNotFoundError:
+            return torch.tensor([0])
+        return img
 
     def show_img(self, index) -> None:
         """Show random image from dataset"""
-        img = torchvision.transforms.functional.pil_to_tensor(self._load_img(index))
+        img = self._load_img(index)
         plt.imshow(img.permute(1, 2, 0).int())
 
     def __getitem__(self, index):
-        img = torchvision.transforms.functional.pil_to_tensor(self._load_img(index))
+        index = self.shuffled_order[index]
+
+        img = self._load_img(index)
         return img.to(torch.long).to(self.device).flatten(), torch.tensor(
             self.data["label"][index], device=self.device, dtype=torch.long
         )
@@ -83,12 +90,12 @@ class Pathfinder(BaseDataset):
                 "label": labels[:160_000],
             },
             "val": {
-                "abs_path": path,
+                "path_base": path,
                 "path_suffix": paths_to_images[160_000:180_000],
                 "label": labels[160_000:180_000],
             },
             "test": {
-                "abs_path": path,
+                "path_base": path,
                 "path_suffix": paths_to_images[180_000:],
                 "label": labels[180_000:],
             },
