@@ -1,4 +1,5 @@
 from pathlib import Path
+import random
 
 import torch
 import pandas as pd
@@ -83,6 +84,7 @@ class Pathfinder(BaseDataset):
             paths_to_images.extend(path_to_images_single_file.tolist())
             labels.extend(df[3].tolist())
 
+        random.shuffle(paths_to_images)
         return {
             "train": {
                 "path_base": path,
