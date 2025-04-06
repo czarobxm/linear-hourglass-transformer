@@ -84,7 +84,18 @@ class Pathfinder(BaseDataset):
             paths_to_images.extend(path_to_images_single_file.tolist())
             labels.extend(df[3].tolist())
 
-        random.shuffle(paths_to_images)
+        combined = list(zip(paths_to_images, labels))
+
+        # Shuffle the combined list
+        random.shuffle(combined)
+
+        # Unzip back into two lists
+        paths_to_images, labels = zip(*combined)
+
+        # Convert back to lists if needed
+        paths_to_images = list(paths_to_images)
+        labels = list(labels)
+
         return {
             "train": {
                 "path_base": path,
