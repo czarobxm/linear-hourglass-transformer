@@ -87,6 +87,6 @@ class ListOps(BaseDataset):
         )
         return {
             "train": {"text": train["Source"], "label": train["Target"]},
-            "val": {"text": val["Source"], "label": test["Target"]},
+            "val": {"text": val["Source"], "label": val["Target"]},
             "test": {"text": test["Source"], "label": test["Target"]},
         }
