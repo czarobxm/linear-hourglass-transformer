@@ -4,7 +4,7 @@ hydra:
 
 defaults:
   - model: classification_cosformer_6x4096
-  - training: default_3_epochs
+  - training: default_5_epochs
   - neptune: default
   - dataset: listops/listops_4096
   - _self_
