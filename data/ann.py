@@ -35,10 +35,7 @@ class ANN(BaseDataset):
         self.tokens_per_text = tokens_per_text
 
     def __len__(self) -> int:
-        result = subprocess.run(
-            ["wc", "-l", self.data["file"]], stdout=subprocess.PIPE, text=True, check=True
-        )
-        return int(result.stdout.strip().split()[0])
+        return self.data["length"]
 
     def __getitem__(self, index: int) -> Dict[str, str]:
         line = linecache.getline(self.data["file"], index + 1).strip()
@@ -81,14 +78,23 @@ class ANN(BaseDataset):
         val_path = f"{path}/new_aan_pairs.eval.tsv"
         test_path = f"{path}/new_aan_pairs.test.tsv"
 
+        train_length = subprocess.run(
+            ["wc", "-l", train_path], stdout=subprocess.PIPE, text=True, check=True
+        )
+        train_length = int(train_length.stdout.strip().split()[0])
+
+        val_length = subprocess.run(
+            ["wc", "-l", val_path], stdout=subprocess.PIPE, text=True, check=True
+        )
+        val_length = int(val_length.stdout.strip().split()[0])
+
+        test_length = subprocess.run(
+            ["wc", "-l", test_path], stdout=subprocess.PIPE, text=True, check=True
+        )
+        test_length = int(test_length.stdout.strip().split()[0])
+
         return {
-            "train": {
-                "file": train_path,
-            },
-            "val": {
-                "file": val_path,
-            },
-            "test": {
-                "file": test_path,
-            },
+            "train": {"file": train_path, "length": train_length},
+            "val": {"file": val_path, "length": val_length},
+            "test": {"file": test_path, "length": test_length},
         }
