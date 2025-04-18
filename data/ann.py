@@ -1,5 +1,9 @@
-import linecache
+import csv
+import os
+import random
 import subprocess
+import sys
+import tempfile
 from typing import Dict
 from pathlib import Path
 
@@ -8,6 +12,52 @@ from transformers import PreTrainedTokenizer
 
 from data.base_dataset import BaseDataset
 from data.utils import download_lra
+
+
+def csv_row_generator(file_path):
+    with open(file_path, newline="", encoding="utf-8") as file:
+        for row in file:
+            yield row
+
+
+def shuffle_large_csv(file_path):
+    # Fix field size limit issue
+    csv.field_size_limit(sys.maxsize)
+
+    dir_name, base_name = os.path.split(file_path)
+    name, ext = os.path.splitext(base_name)
+    shuffled_filename = os.path.join(dir_name, f"{name}_shuffled{ext}")
+
+    temp_file = tempfile.NamedTemporaryFile(
+        delete=False, mode="w", newline="", encoding="utf-8"
+    )
+
+    # Step 1: Write each row with a random key
+    with open(file_path, newline="", encoding="utf-8") as infile:
+        reader = csv.reader(infile)
+        writer = csv.writer(temp_file)
+
+        header = next(reader)  # Save the header to write it first
+        for row in reader:
+            rand_key = random.random()
+            writer.writerow([rand_key] + row)  # Prepend key
+
+    temp_file.close()
+
+    # Step 2: Sort the temp file by the random key and write the shuffled output
+    with open(temp_file.name, newline="", encoding="utf-8") as infile, open(
+        shuffled_filename, "w", newline="", encoding="utf-8"
+    ) as outfile:
+
+        reader = csv.reader(infile)
+        writer = csv.writer(outfile)
+
+        writer.writerow(header)  # Write original header first
+
+        for row in sorted(reader, key=lambda x: float(x[0])):
+            writer.writerow(row[1:])  # Skip the random key
+
+    os.remove(temp_file.name)
 
 
 class ANN(BaseDataset):
@@ -34,12 +84,22 @@ class ANN(BaseDataset):
         self.separator_token = separator_token
         self.tokens_per_text = tokens_per_text
 
+        if shuffle:
+            shuffle_large_csv(self.data["path"])
+            dir_name, base_name = os.path.split(self.data["path"])
+            name, ext = os.path.splitext(base_name)
+            shuffled_filename = os.path.join(dir_name, f"{name}_shuffled{ext}")
+            self.data["iterator"] = csv_row_generator(shuffled_filename)
+        else:
+            self.data["iterator"] = csv_row_generator(self.data["path"])
+
     def __len__(self) -> int:
         return self.data["length"]
 
     def __getitem__(self, index: int) -> Dict[str, str]:
-        line = linecache.getline(self.data["file"], index + 1).strip()
+        line = next(self.data["iterator"]).strip()
         label, _, _, text_1, text_2 = line.split("\t")
+        label = label.strip("\"' ")
         text = (
             text_1[: self.tokens_per_text]
             + self.separator_token
@@ -94,7 +154,16 @@ class ANN(BaseDataset):
         test_length = int(test_length.stdout.strip().split()[0])
 
         return {
-            "train": {"file": train_path, "length": train_length},
-            "val": {"file": val_path, "length": val_length},
-            "test": {"file": test_path, "length": test_length},
+            "train": {
+                "path": train_path,
+                "length": train_length,
+            },
+            "val": {
+                "path": val_path,
+                "length": val_length,
+            },
+            "test": {
+                "path": test_path,
+                "length": test_length,
+            },
         }
