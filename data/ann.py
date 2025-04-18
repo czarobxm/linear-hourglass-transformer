@@ -20,44 +20,142 @@ def csv_row_generator(file_path):
             yield row
 
 
-def shuffle_large_csv(file_path):
-    # Fix field size limit issue
-    csv.field_size_limit(sys.maxsize)
+def shuffle_large_csv(file_path, temp_dir=None, sort_command="sort"):
+    """
+    Shuffles a large CSV file using an intermediate file and external sort command.
+
+    Args:
+        file_path (str): Path to the input CSV file.
+        temp_dir (str, optional): Directory to use for the intermediate file.
+                                  Defaults to the directory of the input file.
+        sort_command (str): Path or name of the external sort utility (e.g., 'sort' or 'gsort').
+    """
+    # Field size limit handling (same as before)
+    try:
+        csv.field_size_limit(2 * 1024 * 1024)
+    except OverflowError:
+        print("Warning: Could not set CSV field size limit.")
+        csv.field_size_limit(131072)
 
     dir_name, base_name = os.path.split(file_path)
     name, ext = os.path.splitext(base_name)
     shuffled_filename = os.path.join(dir_name, f"{name}_shuffled{ext}")
-
-    temp_file = tempfile.NamedTemporaryFile(
-        delete=False, mode="w", newline="", encoding="utf-8"
+    intermediate_filename = os.path.join(
+        temp_dir or dir_name, f"{name}_intermediate_for_sort{ext}"
     )
 
-    # Step 1: Write each row with a random key
-    with open(file_path, newline="", encoding="utf-8") as infile:
-        reader = csv.reader(infile)
-        writer = csv.writer(temp_file)
+    print(f"Step 1: Creating intermediate file with random keys: {intermediate_filename}")
+    header = None
+    try:
+        # Step 1: Write each row (except header) with a random key to an intermediate file
+        with open(file_path, newline="", encoding="utf-8") as infile, open(
+            intermediate_filename, "w", newline="", encoding="utf-8"
+        ) as intermediate_file:
+            reader = csv.reader(infile)
+            writer = csv.writer(
+                intermediate_file, quoting=csv.QUOTE_MINIMAL
+            )  # Adjust quoting if needed
 
-        header = next(reader)  # Save the header to write it first
-        for row in reader:
-            rand_key = random.random()
-            writer.writerow([rand_key] + row)  # Prepend key
+            try:
+                header = next(reader)  # Read the header
+            except StopIteration:
+                print("Warning: Input CSV is empty.")
+                # Clean up intermediate file if created
+                if os.path.exists(intermediate_filename):
+                    os.remove(intermediate_filename)
+                # Create empty output file?
+                if header:
+                    with open(
+                        shuffled_filename, "w", newline="", encoding="utf-8"
+                    ) as outfile:
+                        writer_out = csv.writer(outfile)
+                        writer_out.writerow(header)
+                return  # Exit
 
-    temp_file.close()
+            for i, row in enumerate(reader):
+                # Generate a random key, using a fixed-width format can sometimes help external sort
+                # Ensure the key doesn't contain the delimiter (,)
+                rand_key = f"{random.random():.17f}"  # String format
+                # Prepend key. Ensure the key itself doesn't mess up CSV parsing later
+                # Using a simple comma delimiter for the key might be fine if keys don't contain commas
+                # and data fields are properly quoted by the csv writer.
+                # Using QUOTE_MINIMAL to avoid unnecessary quotes.
+                writer.writerow([rand_key] + row)
 
-    # Step 2: Sort the temp file by the random key and write the shuffled output
-    with open(temp_file.name, newline="", encoding="utf-8") as infile, open(
-        shuffled_filename, "w", newline="", encoding="utf-8"
-    ) as outfile:
+        print(f"Step 2: Sorting intermediate file using external '{sort_command}'...")
+        # Step 2: Use external sort command
+        # Ensure the intermediate file is closed before sorting
+        # sort options:
+        # -t, : Use comma as the field delimiter
+        # -k1,1n : Sort numerically (-n) based on the first field (-k1,1)
+        # -o : Specify the output file
+        # It's safer to write the sorted output to a temporary file first,
+        # then add the header and move it to the final location.
+        sorted_temp_filename = os.path.join(
+            temp_dir or dir_name, f"{name}_sorted_temp{ext}"
+        )
 
-        reader = csv.reader(infile)
-        writer = csv.writer(outfile)
+        sort_cmd_list = [
+            sort_command,
+            "-t,",  # Delimiter is comma
+            "-k1,1n",  # Sort numerically on the first field
+            "-o",
+            sorted_temp_filename,  # Output file
+            intermediate_filename,  # Input file
+        ]
 
-        writer.writerow(header)  # Write original header first
+        try:
+            # Add LC_ALL=C for potentially faster sorting and consistent behavior
+            env = os.environ.copy()
+            env["LC_ALL"] = "C"
+            process = subprocess.run(
+                sort_cmd_list, check=True, capture_output=True, text=True, env=env
+            )
+            print("External sort completed.")
+        except FileNotFoundError:
+            print(
+                f"Error: Sort command '{sort_command}' not found. Please install it or provide the correct path."
+            )
+            raise
+        except subprocess.CalledProcessError as e:
+            print(f"Error during external sort:")
+            print(f"Command: {' '.join(e.cmd)}")
+            print(f"Return Code: {e.returncode}")
+            print(f"Stderr: {e.stderr}")
+            print(f"Stdout: {e.stdout}")
+            raise  # Re-raise the exception
 
-        for row in sorted(reader, key=lambda x: float(x[0])):
-            writer.writerow(row[1:])  # Skip the random key
+        print(f"Step 3: Writing final shuffled file: {shuffled_filename}")
+        # Step 3: Write header and the sorted content (without keys) to final file
+        with open(
+            sorted_temp_filename, newline="", encoding="utf-8"
+        ) as sorted_infile, open(
+            shuffled_filename, "w", newline="", encoding="utf-8"
+        ) as outfile:
+            writer = csv.writer(outfile)
+            reader = csv.reader(sorted_infile)
 
-    os.remove(temp_file.name)
+            if header:
+                writer.writerow(header)  # Write header
+
+            for row in reader:
+                if row:  # Make sure row is not empty
+                    writer.writerow(
+                        row[1:]
+                    )  # Write row skipping the first element (the sort key)
+
+        # Clean up the temporary sorted file
+        if os.path.exists(sorted_temp_filename):
+            print(f"Cleaning up temporary sorted file: {sorted_temp_filename}")
+            os.remove(sorted_temp_filename)
+
+        print(f"Shuffled file created: {shuffled_filename}")
+
+    finally:
+        # Step 4: Clean up the intermediate file
+        if os.path.exists(intermediate_filename):
+            print(f"Cleaning up intermediate file: {intermediate_filename}")
+            os.remove(intermediate_filename)
 
 
 class ANN(BaseDataset):
