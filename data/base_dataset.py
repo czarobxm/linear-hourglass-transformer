@@ -30,6 +30,7 @@ class BaseDataset(torch.utils.data.Dataset):
         self.token_type_ids = None
         self.max_length = max_length
 
+        self.shuffle = shuffle
         self.create_shuffle_order(shuffle)
 
         self.device = device

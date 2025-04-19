@@ -1,5 +1,7 @@
+import csv
 import os
 import subprocess
+import random
 from typing import Dict
 from pathlib import Path
 
@@ -39,8 +41,10 @@ class ANN(BaseDataset):
         )
         self.separator_token = separator_token
         self.tokens_per_text = tokens_per_text
+        self.create_data_iterator()
 
-        if shuffle:
+    def create_data_iterator(self) -> None:
+        if self.shuffle:
             dir_name, base_name = os.path.split(self.data["path"])
             name, ext = os.path.splitext(base_name)
             shuffled_filename = os.path.join(dir_name, f"{name}_shuffled{ext}")
@@ -52,7 +56,11 @@ class ANN(BaseDataset):
         return self.data["length"]
 
     def __getitem__(self, index: int) -> Dict[str, str]:
-        line = next(self.data["iterator"]).strip()
+        try:
+            line = next(self.data["iterator"]).strip()
+        except StopIteration:
+            # Reinitialize the iterator if we reach the end
+            self.create_data_iterator()
         label, _, _, text_1, text_2 = line.split("\t")
         label = label.strip("\"' ")
         text = (
