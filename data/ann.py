@@ -58,9 +58,10 @@ class ANN(BaseDataset):
     def __getitem__(self, index: int) -> Dict[str, str]:
         try:
             line = next(self.data["iterator"]).strip()
-        except StopIteration:
+        except StopIteration as exc:
             # Reinitialize the iterator if we reach the end
             self.create_data_iterator()
+            raise StopIteration from exc
         label, _, _, text_1, text_2 = line.split("\t")
         label = label.strip("\"' ")
         text = (
