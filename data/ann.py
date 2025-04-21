@@ -41,16 +41,18 @@ class ANN(BaseDataset):
         )
         self.separator_token = separator_token
         self.tokens_per_text = tokens_per_text
-        self.create_data_iterator()
-
-    def create_data_iterator(self) -> None:
         if self.shuffle:
             dir_name, base_name = os.path.split(self.data["path"])
             name, ext = os.path.splitext(base_name)
-            shuffled_filename = os.path.join(dir_name, f"{name}_shuffled{ext}")
-            self.data["iterator"] = csv_row_generator(shuffled_filename)
+            self.data["path"] = os.path.join(dir_name, f"{name}_shuffled{ext}")
+            self.data["iterator"] = csv_row_generator(self.data["path"])
         else:
             self.data["iterator"] = csv_row_generator(self.data["path"])
+
+        length = subprocess.run(
+            ["wc", "-l", self.data["path"]], stdout=subprocess.PIPE, text=True, check=True
+        )
+        self.data["length"] = int(length.stdout.strip().split()[0])
 
     def __len__(self) -> int:
         return self.data["length"]
@@ -60,7 +62,7 @@ class ANN(BaseDataset):
             line = next(self.data["iterator"]).strip()
         except StopIteration as exc:
             # Reinitialize the iterator if we reach the end
-            self.create_data_iterator()
+            self.data["iterator"] = csv_row_generator(self.data["path"])
             raise StopIteration from exc
         label, _, _, text_1, text_2 = line.split("\t")
         label = label.strip("\"' ")
@@ -102,32 +104,14 @@ class ANN(BaseDataset):
         val_path = f"{path}/new_aan_pairs.eval.tsv"
         test_path = f"{path}/new_aan_pairs.test.tsv"
 
-        train_length = subprocess.run(
-            ["wc", "-l", train_path], stdout=subprocess.PIPE, text=True, check=True
-        )
-        train_length = int(train_length.stdout.strip().split()[0])
-
-        val_length = subprocess.run(
-            ["wc", "-l", val_path], stdout=subprocess.PIPE, text=True, check=True
-        )
-        val_length = int(val_length.stdout.strip().split()[0])
-
-        test_length = subprocess.run(
-            ["wc", "-l", test_path], stdout=subprocess.PIPE, text=True, check=True
-        )
-        test_length = int(test_length.stdout.strip().split()[0])
-
         return {
             "train": {
                 "path": train_path,
-                "length": train_length,
             },
             "val": {
                 "path": val_path,
-                "length": val_length,
             },
             "test": {
                 "path": test_path,
-                "length": test_length,
             },
         }
