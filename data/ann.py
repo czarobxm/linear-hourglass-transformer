@@ -32,6 +32,19 @@ class ANN(BaseDataset):
         tokens_per_text: int = 2045,
         device: str = "cpu",
     ) -> None:
+        if shuffle:
+            dir_name, base_name = os.path.split(data["path"])
+            name, ext = os.path.splitext(base_name)
+            data["path"] = os.path.join(dir_name, f"{name}_shuffled{ext}")
+            data["iterator"] = csv_row_generator(data["path"])
+        else:
+            data["iterator"] = csv_row_generator(data["path"])
+
+        length = subprocess.run(
+            ["wc", "-l", data["path"]], stdout=subprocess.PIPE, text=True, check=True
+        )
+        data["length"] = int(length.stdout.strip().split()[0])
+
         super().__init__(
             data=data,
             tokenizer=tokenizer,
@@ -41,18 +54,6 @@ class ANN(BaseDataset):
         )
         self.separator_token = separator_token
         self.tokens_per_text = tokens_per_text
-        if self.shuffle:
-            dir_name, base_name = os.path.split(self.data["path"])
-            name, ext = os.path.splitext(base_name)
-            self.data["path"] = os.path.join(dir_name, f"{name}_shuffled{ext}")
-            self.data["iterator"] = csv_row_generator(self.data["path"])
-        else:
-            self.data["iterator"] = csv_row_generator(self.data["path"])
-
-        length = subprocess.run(
-            ["wc", "-l", self.data["path"]], stdout=subprocess.PIPE, text=True, check=True
-        )
-        self.data["length"] = int(length.stdout.strip().split()[0])
 
     def __len__(self) -> int:
         return self.data["length"]
