@@ -1,21 +1,12 @@
-import csv
-import os
-import subprocess
-import random
 from typing import Dict
 from pathlib import Path
 
 import torch
+import pandas as pd
 from transformers import PreTrainedTokenizer
 
 from data.base_dataset import BaseDataset
 from data.utils import download_lra
-
-
-def csv_row_generator(file_path):
-    with open(file_path, newline="", encoding="utf-8") as file:
-        for row in file:
-            yield row
 
 
 class ANN(BaseDataset):
@@ -32,19 +23,6 @@ class ANN(BaseDataset):
         tokens_per_text: int = 2045,
         device: str = "cpu",
     ) -> None:
-        if shuffle:
-            dir_name, base_name = os.path.split(data["path"])
-            name, ext = os.path.splitext(base_name)
-            data["path"] = os.path.join(dir_name, f"{name}_shuffled{ext}")
-            data["iterator"] = csv_row_generator(data["path"])
-        else:
-            data["iterator"] = csv_row_generator(data["path"])
-
-        length = subprocess.run(
-            ["wc", "-l", data["path"]], stdout=subprocess.PIPE, text=True, check=True
-        )
-        data["length"] = int(length.stdout.strip().split()[0])
-
         super().__init__(
             data=data,
             tokenizer=tokenizer,
@@ -56,21 +34,13 @@ class ANN(BaseDataset):
         self.tokens_per_text = tokens_per_text
 
     def __len__(self) -> int:
-        return self.data["length"]
+        return len(self.data["text_1"])
 
     def __getitem__(self, index: int) -> Dict[str, str]:
-        try:
-            line = next(self.data["iterator"]).strip()
-        except StopIteration as exc:
-            # Reinitialize the iterator if we reach the end
-            self.data["iterator"] = csv_row_generator(self.data["path"])
-            raise StopIteration from exc
-        label, _, _, text_1, text_2 = line.split("\t")
-        label = label.strip("\"' ")
         text = (
-            text_1[: self.tokens_per_text]
+            self.data["text_1"][index][: self.tokens_per_text]
             + self.separator_token
-            + text_2[: self.tokens_per_text]
+            + self.data["text_2"][index][: self.tokens_per_text]
         )
 
         # Tokenize
@@ -84,7 +54,7 @@ class ANN(BaseDataset):
 
         return (
             token_dict["input_ids"].squeeze(0).to(self.device),
-            torch.tensor(float(label), dtype=torch.long, device=self.device),
+            torch.tensor(self.data["label"][index], dtype=torch.long, device=self.device),
         )
 
     @classmethod
@@ -101,18 +71,36 @@ class ANN(BaseDataset):
         if not path.exists():
             cls.download_dataset(path)
 
-        train_path = f"{path}/new_aan_pairs.train.tsv"
-        val_path = f"{path}/new_aan_pairs.eval.tsv"
-        test_path = f"{path}/new_aan_pairs.test.tsv"
+        train = pd.read_csv(
+            f"{path}/new_aan_pairs.train.tsv",
+            sep="\t",
+            header=None,
+        )
+        val = pd.read_csv(
+            f"{path}/new_aan_pairs.eval.tsv",
+            sep="\t",
+            header=None,
+        )
+        test = pd.read_csv(
+            f"{path}/new_aan_pairs.test.tsv",
+            sep="\t",
+            header=None,
+        )
 
         return {
             "train": {
-                "path": train_path,
+                "text_1": train[3].tolist(),
+                "text_2": train[4].tolist(),
+                "label": train[0].tolist(),
             },
             "val": {
-                "path": val_path,
+                "text_1": val[3].tolist(),
+                "text_2": val[4].tolist(),
+                "label": val[0].tolist(),
             },
             "test": {
-                "path": test_path,
+                "text_1": test[3].tolist(),
+                "text_2": test[4].tolist(),
+                "label": test[0].tolist(),
             },
         }
