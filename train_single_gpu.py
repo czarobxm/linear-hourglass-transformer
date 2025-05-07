@@ -28,6 +28,7 @@ cs.store(name="experiment", node=ExperimentCfg)
     version_base=None, config_path="conf/experiments", config_name="enwik9_vanilla_8x4096"
 )
 def main(cfg: ExperimentCfg) -> None:
+    print(cfg)
     device = cfg.device
 
     logger = setup_logging()
