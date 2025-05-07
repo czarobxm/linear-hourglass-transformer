@@ -37,6 +37,7 @@ class ANN(BaseDataset):
         return len(self.data["text_1"])
 
     def __getitem__(self, index: int) -> Dict[str, str]:
+        index = self.shuffled_order[index]
         text = (
             self.data["text_1"][index][: self.tokens_per_text]
             + self.separator_token
