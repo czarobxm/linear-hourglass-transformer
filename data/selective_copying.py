@@ -52,6 +52,7 @@ def create_path(
     vocab_size: int = 5,
     query_len: int = 15,
     num_samples: int = 10,
+    **_kwargs,
 ):
     full_path = (
         f"{path}/"
