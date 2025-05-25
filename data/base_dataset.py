@@ -85,6 +85,12 @@ class BaseDataset(torch.utils.data.Dataset):
                 device=device,
             )
         )
+        if isinstance(splits["test"], list):
+            return (
+                cls(data=splits["train"], **all_kwargs),
+                cls(data=splits["val"], **all_kwargs),
+                [cls(data=test_split, **all_kwargs) for test_split in splits["test"]],
+            )
         return (
             cls(data=splits["train"], **all_kwargs),
             cls(data=splits["val"], **all_kwargs),

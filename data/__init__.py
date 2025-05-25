@@ -10,3 +10,4 @@ from .pathfinder import Pathfinder
 from .listops import ListOps
 from .mqar import MQAR
 from .selective_copying import SelectiveCopying
+from .copying import Copying

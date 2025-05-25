@@ -56,8 +56,13 @@ def prepare_inputs_and_targets(
     if task == "classification":
         return data[0].to(device), data[1].to(device)
     elif task == "sequence_modelling":
+        if isinstance(data, list):
+            inputs, targets = data
+            return inputs.detach().to(device), targets.detach().contiguous().view(-1).to(
+                device
+            )
         inputs = data.detach().clone().to(device)
-        targets = data.contiguous().view(-1).to(device)
+        targets = data.detach().contiguous().view(-1).to(device)
         return inputs, targets
     else:
         raise ValueError(f"Unsupported task: {task}")
@@ -210,7 +215,7 @@ def evaluate_one_batch(
 
 
 def evaluate_one_epoch(
-    val_loader: DataLoader,
+    loader: DataLoader,
     model: BaseModel,
     loss_fn: nn.Module,
     run: neptune.Run,
@@ -221,7 +226,7 @@ def evaluate_one_epoch(
     correct = total = 0
 
     with torch.no_grad():
-        for vdata in val_loader:
+        for vdata in loader:
             vloss, batch_correct, batch_total = evaluate_one_batch(
                 vdata, model, loss_fn, task
             )
@@ -229,7 +234,7 @@ def evaluate_one_epoch(
             correct += batch_correct
             total += batch_total
 
-    avg_loss = running_vloss / len(val_loader)
+    avg_loss = running_vloss / len(loader)
     accuracy = correct / total
     run[f"metrics/{stage}_avg_loss"].append(avg_loss)
     run[f"metrics/{stage}_acc"].append(accuracy)
@@ -311,7 +316,11 @@ def train(
             torch.load(f"models_checkpoints/{run['sys/id'].fetch()}/best.pth")
         )
 
-    evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
+    if isinstance(test_loader, list):
+        for one_test_loader in test_loader:
+            evaluate_one_epoch(one_test_loader, model, loss_fn, run, cfg.task, "test")
+    else:
+        evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
 
     delete_model_checkpoints(run)
 
