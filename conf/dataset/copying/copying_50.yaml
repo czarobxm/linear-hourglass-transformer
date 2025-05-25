@@ -1,0 +1,10 @@
+_target_: data.copying.Copying.create_split_datasets
+use_validation: true
+path: ./datastorage/copying
+max_length: 50
+shuffle: true
+vocab_size: 30
+sequence_length: 50,20,700
+num_samples: 300000,200
+create_artificial_datasets: true
+
