@@ -19,10 +19,9 @@ class HourglassCfg:
     upsampling_type: str
     attention_downsampling: bool
     attention_upsampling: bool
+    attention_sampling_full_attention: bool
     upsampling_residual: bool
     sampling_post_norm: bool
-    sampling_use_linear: bool
-    sampling_use_feedforward: bool
 
 
 @dataclass

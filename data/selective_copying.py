@@ -8,6 +8,42 @@ from transformers import PreTrainedTokenizer
 from data.base_dataset import BaseArtificialDataset
 
 
+def process_kwargs(kwargs):
+    print(kwargs)
+    length = None
+    is_list = None
+    for key, value in kwargs.items():
+        if is_list is None:
+            is_list = isinstance(value, list)
+
+        if length is None:
+            print(key, value, type(value), isinstance(value, list) == is_list)
+            length = len(value)
+
+        if len(value) != length:
+            raise ValueError(
+                f"All lists must have the same length. "
+                f"Expected {length}, but got {len(value)} for key: {key}"
+            )
+
+        if isinstance(value, list) ^ is_list:  # XOR gate
+            raise ValueError(
+                f"All lists must be of the same type. "
+                f"Expected list, but got {type(value)} for key: {key}"
+            )
+
+    if not is_list:
+        return [kwargs]
+
+    length = len(next(iter(kwargs.values())))  # Get the length of the lists
+    result = []
+
+    for i in range(length):
+        entry = {key: value[i] for key, value in kwargs.items()}
+        result.append(entry)
+    return result
+
+
 def generate_selective_copying_data(
     context_len: int,
     query_len: int,
@@ -107,33 +143,69 @@ class SelectiveCopying(BaseArtificialDataset):
     def create_artificial_datasets(cls, path: str, **kwargs):
         if path is None:
             path = Path("./datastorage/sequence_modelling")
-        inputs, labels = generate_selective_copying_data(**kwargs)
-        torch.save(inputs, create_path(path, "inputs", **kwargs))
-        torch.save(labels, create_path(path, "labels", **kwargs))
+        kwargs = process_kwargs(kwargs)
+        for kwg in kwargs:
+            inputs, labels = generate_selective_copying_data(**kwg)
+            torch.save(inputs, create_path(path, "inputs", **kwg))
+            torch.save(labels, create_path(path, "labels", **kwg))
 
     @classmethod
     def load_raw_splits(cls, path: str, **kwargs):
         if path is None:
             path = Path("./datastorage/sequence_modelling")
 
-        inputs = torch.load(
-            create_path(path=path, inputs_or_labels="inputs", **kwargs),
-        )
-        labels = torch.load(
-            create_path(path=path, inputs_or_labels="labels", **kwargs),
-        )
-        length = inputs.shape[0]
-        return {
-            "train": {
-                "inputs": inputs[: int(length * 0.8)],
-                "labels": labels[: int(length * 0.8)],
-            },
-            "val": {
-                "inputs": inputs[int(length * 0.8) : int(length * 0.9)],
-                "labels": labels[int(length * 0.8) : int(length * 0.9)],
-            },
-            "test": {
-                "inputs": inputs[int(length * 0.9) :],
-                "labels": labels[int(length * 0.9) :],
-            },
-        }
+        kwargs.pop("use_validation")
+        kwargs = process_kwargs(kwargs)
+
+        print(kwargs)
+
+        if isinstance(kwargs, list):
+            inputs = []
+            labels = []
+            for kwg in kwargs:
+                inputs.append(
+                    torch.load(
+                        create_path(path=path, inputs_or_labels="inputs", **kwg),
+                    )
+                )
+                labels.append(
+                    torch.load(
+                        create_path(path=path, inputs_or_labels="labels", **kwg),
+                    )
+                )
+
+        if len(inputs) == 1:
+            length = len(inputs[0])
+            return {
+                "train": {
+                    "inputs": inputs[: int(length * 0.8)],
+                    "labels": labels[: int(length * 0.8)],
+                },
+                "val": {
+                    "inputs": inputs[int(length * 0.8) : int(length * 0.9)],
+                    "labels": labels[int(length * 0.8) : int(length * 0.9)],
+                },
+                "test": {
+                    "inputs": inputs[int(length * 0.9) :],
+                    "labels": labels[int(length * 0.9) :],
+                },
+            }
+        else:
+            length = len(inputs[0])
+            return {
+                "train": {
+                    "inputs": inputs[0][: int(length * 0.8)],
+                    "labels": labels[0][: int(length * 0.8)],
+                },
+                "val": {
+                    "inputs": inputs[0][int(length * 0.8) :],
+                    "labels": labels[0][int(length * 0.8) :],
+                },
+                "test": [
+                    {
+                        "inputs": inputs[i],
+                        "labels": labels[i],
+                    }
+                    for i in range(1, len(inputs))
+                ],
+            }

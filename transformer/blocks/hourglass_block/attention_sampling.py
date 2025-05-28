@@ -1,7 +1,8 @@
+from functools import partial
+
 import torch
 from torch import nn
-
-from transformer.feed_forward import FeedForward
+from torch.nn.functional import scaled_dot_product_attention
 
 
 class AttentionSampling(nn.Module):
@@ -10,40 +11,24 @@ class AttentionSampling(nn.Module):
         d_model: int,
         factor: int,
         sampling_type: str,
-        act_fun: nn.Module,
-        use_linear: bool,
+        use_full_attention: bool,
         post_norm: bool,
-        use_feedforward: bool,
     ) -> None:
         super().__init__()
         self.factor = factor
         self.sampling_type = sampling_type
         self.d_model = d_model
-        self.use_linear = use_linear
+        self.use_full_attention = use_full_attention
         self.post_norm = post_norm
-        self.use_feed_forward = use_feedforward
 
-        self.act_fun = act_fun
-        if self.sampling_type == "downsampling":
+        if self.sampling_type == "downsampling" and not self.use_full_attention:
             self.attention = self.attention_downsampling
-        elif self.sampling_type == "upsampling":
+        elif self.sampling_type == "upsampling" and not self.use_full_attention:
             self.attention = self.attention_upsampling
+        elif self.use_full_attention:
+            self.attention = partial(scaled_dot_product_attention, is_causal=True)
 
-        self.w_q = nn.Linear(self.d_model, self.d_model)
-        self.w_k = nn.Linear(self.d_model, self.d_model)
-        self.w_v = nn.Linear(self.d_model, self.d_model)
-
-        self.norm1 = nn.LayerNorm(self.d_model)
-        self.norm2 = nn.LayerNorm(self.d_model)
-        self.ffn = FeedForward(d_model=d_model, hidden=1 * d_model, drop_prob=0.0)
-
-        self._init_weights()
-
-    def _init_weights(self):
-        """Initialize weights of the model."""
-        nn.init.xavier_uniform_(self.w_q.weight)
-        nn.init.xavier_uniform_(self.w_k.weight)
-        nn.init.xavier_uniform_(self.w_v.weight)
+        self.norm1 = nn.LayerNorm(d_model)
 
     def attention_downsampling(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
@@ -81,16 +66,7 @@ class AttentionSampling(nn.Module):
         return attn_output.view(batch_size, seq_len, d_model)
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
-        # Linear projections
-        if self.use_linear:
-            query = self.w_q(query)
-            key = self.w_k(key)
-            value = self.w_v(value)
-
-        # Activation functions
-        query = self.act_fun(query)
-        key = self.act_fun(key)
-
+        print(self.attention)
         # Attention
         if self.post_norm:
             output = self.norm1(query + self.attention(query, key, value))
@@ -98,12 +74,5 @@ class AttentionSampling(nn.Module):
             output = query + self.attention(
                 self.norm1(query), self.norm1(key), self.norm1(value)
             )
-
-        # Feedforward
-        if self.use_feed_forward:
-            if self.post_norm:
-                output = self.norm2(output + self.ffn(output))
-            else:
-                output = output + self.ffn(self.norm2(output))
 
         return output

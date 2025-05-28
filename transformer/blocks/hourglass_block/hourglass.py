@@ -40,40 +40,37 @@ class HourglassBlock(nn.Module):
         dropout: float = 0.1,
         act_fun: nn.Module = None,
         post_norm: bool = False,
-        downsampling_type: str = "linear",
-        upsampling_type: str = "linear",
-        attention_downsampling: bool = False,
-        attention_upsampling: bool = False,
-        upsampling_residual: bool = True,
-        sampling_post_norm: bool = True,
-        sampling_use_linear: bool = True,
-        sampling_use_feedforward: bool = True,
+        hourglass_downsampling_type: str = "linear",
+        hourglass_upsampling_type: str = "linear",
+        hourglass_attention_downsampling: bool = False,
+        hourglass_attention_upsampling: bool = False,
+        hourglass_upsampling_residual: bool = True,
+        hourglass_sampling_post_norm: bool = True,
+        hourglass_attention_sampling_full_attention: bool = True,
         device: str = "cpu",
         **kwargs
     ) -> None:
+
         super().__init__()
         self.d_model = d_model
         self.sizes = sizes
-        self.downsampling_type = downsampling_type
-        self.upsampling_type = upsampling_type
-        self.attention_downsampling = attention_downsampling
-        self.attention_upsampling = attention_upsampling
-        self.upsampling_residual = upsampling_residual
-        self.sampling_post_norm = sampling_post_norm
-        self.sampling_use_linear = sampling_use_linear
-        self.sampling_use_feedforward = sampling_use_feedforward
+        self.downsampling_type = hourglass_downsampling_type
+        self.upsampling_type = hourglass_upsampling_type
+        self.attention_downsampling = hourglass_attention_downsampling
+        self.attention_upsampling = hourglass_attention_upsampling
+        self.upsampling_residual = hourglass_upsampling_residual
+        self.sampling_post_norm = hourglass_sampling_post_norm
+        self.sampling_full_attention = hourglass_attention_sampling_full_attention
         self.device = device
 
         self._validate_inputs(n_layers, sizes)
 
         if self.attention_downsampling:
             self.attention_downsampling_layers = (
-                self._create_attention_downsampling_layers(act_fun)
+                self._create_attention_downsampling_layers()
             )
         if self.attention_upsampling:
-            self.attention_upsampling_layers = self._create_attention_upsampling_layers(
-                act_fun
-            )
+            self.attention_upsampling_layers = self._create_attention_upsampling_layers()
 
         self.downsampling_layers, self.upsampling_layers = self._create_sampling_layers()
         self.shift_right_layers = self._create_shift_right_layers()
@@ -98,7 +95,7 @@ class HourglassBlock(nn.Module):
             else:
                 assert sizes[i + 1] % sizes[i] == 0, "Adjacent sizes must be divisible"
 
-    def _create_attention_downsampling_layers(self, act_fun) -> nn.ModuleList:
+    def _create_attention_downsampling_layers(self) -> nn.ModuleList:
         """Create attention downsamplinglayers."""
         attention_downsampling_layers = nn.ModuleList()
         for i in range(len(self.sizes) - 1):
@@ -109,15 +106,13 @@ class HourglassBlock(nn.Module):
                         self.d_model,
                         factor,
                         sampling_type="downsampling",
-                        act_fun=act_fun,
+                        use_full_attention=self.sampling_full_attention,
                         post_norm=self.sampling_post_norm,
-                        use_linear=self.sampling_use_linear,
-                        use_feedforward=self.sampling_use_feedforward,
                     )
                 )
         return attention_downsampling_layers
 
-    def _create_attention_upsampling_layers(self, act_fun) -> nn.ModuleList:
+    def _create_attention_upsampling_layers(self) -> nn.ModuleList:
         """Create attention upsampling layers."""
         attention_upsampling_layers = nn.ModuleList()
         for i in range(len(self.sizes) - 1):
@@ -128,10 +123,8 @@ class HourglassBlock(nn.Module):
                         self.d_model,
                         factor,
                         sampling_type="upsampling",
-                        act_fun=act_fun,
+                        use_full_attention=self.sampling_full_attention,
                         post_norm=self.sampling_post_norm,
-                        use_linear=self.sampling_use_linear,
-                        use_feedforward=self.sampling_use_feedforward,
                     )
                 )
         return attention_upsampling_layers
