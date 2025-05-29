@@ -4,6 +4,12 @@ import torch
 from torch import nn
 from torch.nn.functional import scaled_dot_product_attention
 
+from transformer.feed_forward import FeedForward
+from transformer.multi_head_attention.multi_head_attention import MultiHeadAttention
+from transformer.multi_head_attention.attention_mechanism.attn_params import (
+    VanillaParams,
+)
+
 
 class AttentionSampling(nn.Module):
     def __init__(
@@ -26,8 +32,12 @@ class AttentionSampling(nn.Module):
         elif self.sampling_type == "upsampling" and not self.use_full_attention:
             self.attention = self.attention_upsampling
         elif self.use_full_attention:
-            self.attention = partial(scaled_dot_product_attention, is_causal=True)
+            self.attention = MultiHeadAttention(
+                d_model=d_model, num_heads=8, method_params=VanillaParams()
+            )
+            # self.attention = partial(scaled_dot_product_attention, is_causal=True)
 
+        self.ffn = FeedForward(d_model, d_model * 4)
         self.norm1 = nn.LayerNorm(d_model)
 
     def attention_downsampling(
@@ -66,7 +76,6 @@ class AttentionSampling(nn.Module):
         return attn_output.view(batch_size, seq_len, d_model)
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
-        print(self.attention)
         # Attention
         if self.post_norm:
             output = self.norm1(query + self.attention(query, key, value))
