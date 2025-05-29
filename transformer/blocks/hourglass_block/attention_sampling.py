@@ -82,12 +82,12 @@ class AttentionSampling(nn.Module):
         return attn_output.view(batch_size, seq_len, d_model)
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
-        # Attention
-        if self.post_norm:
-            output = self.norm1(query + self.attention(query, key, value))
-        else:
-            output = query + self.attention(
-                self.norm1(query), self.norm1(key), self.norm1(value)
-            )
+        # # Attention
+        # if self.post_norm:
+        #     output = self.norm1(query + self.attention(query, key, value))
+        # else:
+        #     output = query + self.attention(
+        #         self.norm1(query), self.norm1(key), self.norm1(value)
+        #     )
 
-        return output
+        return self.attention(query, key, causal=True, inference=False)
