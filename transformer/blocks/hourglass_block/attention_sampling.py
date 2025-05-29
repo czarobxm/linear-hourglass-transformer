@@ -5,7 +5,7 @@ from torch import nn
 from torch.nn.functional import scaled_dot_product_attention
 
 from transformer.feed_forward import FeedForward
-from transformer.multi_head_attention.multi_head_attention import MultiHeadAttention
+from transformer.blocks.single_layer import TransformerLayer
 from transformer.multi_head_attention.attention_mechanism.attn_params import (
     VanillaParams,
 )
@@ -32,8 +32,14 @@ class AttentionSampling(nn.Module):
         elif self.sampling_type == "upsampling" and not self.use_full_attention:
             self.attention = self.attention_upsampling
         elif self.use_full_attention:
-            self.attention = MultiHeadAttention(
-                d_model=d_model, num_heads=8, method_params=VanillaParams()
+            self.attention = TransformerLayer(
+                d_model=d_model,
+                num_heads=8,
+                method_params=VanillaParams(),
+                act_fun=nn.Identity(),
+                apply_rotary_pos_enc=False,
+                dropout=0.0,
+                device="cuda" if torch.cuda.is_available() else "mps",
             )
             # self.attention = partial(scaled_dot_product_attention, is_causal=True)
 
