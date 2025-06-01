@@ -57,9 +57,23 @@ class VanillaAttention(BaseAttentionMechanism):
 
         attn_bias = torch.zeros(L, S, dtype=query.dtype, device=query.device)
         if causal:
-            causal_mask = torch.triu(
-                torch.ones(L, S, dtype=torch.bool, device=query.device), diagonal=1
-            )
+            if S > L:
+                causal_mask = torch.triu(
+                    torch.ones(L, L, dtype=torch.bool, device=query.device), diagonal=1
+                )
+                block_size = S // L
+                causal_mask = causal_mask.repeat_interleave(block_size, dim=1)
+            elif L > S:
+                causal_mask = torch.triu(
+                    torch.ones(S, S, dtype=torch.bool, device=query.device), diagonal=1
+                )
+                block_size = L // S
+                causal_mask = causal_mask.repeat_interleave(block_size, dim=0)
+            else:
+                causal_mask = torch.triu(
+                    torch.ones(S, S, dtype=torch.bool, device=query.device), diagonal=1
+                )
+
             attn_bias.masked_fill_(causal_mask, float("-inf"))
 
         attn_weight = query @ key.transpose(-2, -1) * scale_factor
