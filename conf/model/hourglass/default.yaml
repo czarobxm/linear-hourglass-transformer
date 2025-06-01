@@ -1,7 +1,6 @@
 downsampling_type: linear
 upsampling_type: linear
-attention_downsampling: true
-attention_upsampling: true
-attention_sampling_full_attention: true
+attention_downsampling: false
+attention_upsampling: false
 upsampling_residual: true
-sampling_post_norm: true
+sampling_post_norm: false

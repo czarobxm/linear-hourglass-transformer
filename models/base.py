@@ -44,7 +44,6 @@ class BaseModel(nn.Module):
         use_embedding: bool,
         hourglass_downsampling_type: str,
         hourglass_upsampling_type: str,
-        hourglass_attention_sampling_full_attention: bool,
         hourglass_attention_downsampling: bool,
         hourglass_attention_upsampling: bool,
         hourglass_upsampling_residual: bool,
@@ -72,9 +71,6 @@ class BaseModel(nn.Module):
         self.use_embedding = use_embedding
         self.hourglass_attention_downsampling = hourglass_attention_downsampling
         self.hourglass_attention_upsampling = hourglass_attention_upsampling
-        self.hourglass_attention_sampling_full_attention = (
-            hourglass_attention_sampling_full_attention
-        )
         self.hourglass_upsampling_residual = hourglass_upsampling_residual
         self.hourglass_downsampling_type = hourglass_downsampling_type
         self.hourglass_upsampling_type = hourglass_upsampling_type
@@ -110,7 +106,6 @@ class BaseModel(nn.Module):
             hourglass_upsampling_type=cfg_model.hourglass.upsampling_type,
             hourglass_attention_downsampling=cfg_model.hourglass.attention_downsampling,
             hourglass_attention_upsampling=cfg_model.hourglass.attention_upsampling,
-            hourglass_attention_sampling_full_attention=cfg_model.hourglass.attention_sampling_full_attention,
             hourglass_upsampling_residual=cfg_model.hourglass.upsampling_residual,
             hourglass_sampling_post_norm=cfg_model.hourglass.sampling_post_norm,
             device=device,
@@ -145,8 +140,6 @@ class BaseModel(nn.Module):
             "attention_upsampling": self.hourglass_attention_upsampling,
             "upsampling_residual": self.hourglass_upsampling_residual,
             "sampling_post_norm": self.hourglass_sampling_post_norm,
-            "sampling_use_linear": self.hourglass_sampling_use_linear,
-            "sampling_use_feedforward": self.hourglass_sampling_use_feedforward,
             # MHA parameters
             "mha_type": self.method_params.method,
             "d_model": self.d_model,
