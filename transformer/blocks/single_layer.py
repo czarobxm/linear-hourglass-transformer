@@ -34,6 +34,7 @@ class TransformerLayer(nn.Module):
         dropout: float = 0.1,
         act_fun: Optional[nn.Module] = None,
         post_norm: bool = False,
+        apply_linear: bool = True,
         device: str = "cpu",
     ) -> None:
         """
@@ -48,6 +49,7 @@ class TransformerLayer(nn.Module):
         self.num_heads = num_heads
         self.dim_head = d_model // num_heads
         self.post_norm = post_norm
+        self.apply_linear = apply_linear
         self.device = device
 
         self.attention = MultiHeadAttention(

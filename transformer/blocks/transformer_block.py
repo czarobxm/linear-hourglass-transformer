@@ -81,12 +81,10 @@ class Block(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        key_value: torch.Tensor = None,
         causal: bool = True,
         inference: bool = False,
     ) -> torch.Tensor:
         """Produces the output of the encoder block."""
         for layer in self.layers:
-            x = layer(x=x, key_value=key_value, causal=causal, inference=inference)
-            key_value = None  # Set key_value to None after first layer
+            x = layer(x=x, causal=causal, inference=inference)
         return x

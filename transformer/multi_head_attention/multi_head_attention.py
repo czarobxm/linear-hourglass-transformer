@@ -55,6 +55,7 @@ class MultiHeadAttention(nn.Module):
         apply_rotary_pos_enc: bool = True,
         dropout: float = 0.1,
         act_fun: nn.Module = None,
+        apply_linear: bool = True,
         device: str = "cpu",
     ) -> None:
         super().__init__()
@@ -65,16 +66,19 @@ class MultiHeadAttention(nn.Module):
         self.dropout = dropout
         self.apply_rotary_pos_enc = apply_rotary_pos_enc
         self.act_fun = act_fun
+        self.apply_linear = apply_linear
         if self.apply_rotary_pos_enc:
             self.rotary_pos_enc = RotaryEmbedding(
                 self.dim_head // 2,
             )
         self.device = device
 
-        # Linear transformations
-        self.w_q = nn.Linear(self.d_model, self.d_model)
-        self.w_k = nn.Linear(self.d_model, self.d_model)
-        self.w_v = nn.Linear(self.d_model, self.d_model)
+        if self.apply_linear:
+            # Linear transformations
+            self.w_q = nn.Linear(self.d_model, self.d_model)
+            self.w_k = nn.Linear(self.d_model, self.d_model)
+            self.w_v = nn.Linear(self.d_model, self.d_model)
+            self._init_weights()
 
         # Set attention mechanism
         if self.method_params.method == "vanilla":
@@ -98,7 +102,6 @@ class MultiHeadAttention(nn.Module):
 
         self.dropout = nn.Dropout(p=self.dropout)
 
-        self._init_weights()
         self.to(self.device)
 
     def _init_weights(self) -> None:
@@ -129,10 +132,11 @@ class MultiHeadAttention(nn.Module):
 
         :return: attention mechanism output
         """
-        # Linear projections
-        query = self.w_q(query)
-        key = self.w_k(key)
-        value = self.w_v(value)
+        if self.apply_linear:
+            # Linear projections
+            query = self.w_q(query)
+            key = self.w_k(key)
+            value = self.w_v(value)
 
         # Apply activation function
         query = self.act_fun(query)

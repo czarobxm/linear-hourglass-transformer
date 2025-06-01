@@ -54,6 +54,8 @@ class HourglassBlock(nn.Module):
         super().__init__()
         self.d_model = d_model
         self.sizes = sizes
+        self.method_params = method_params
+        self.act_fun = act_fun
         self.downsampling_type = hourglass_downsampling_type
         self.upsampling_type = hourglass_upsampling_type
         self.attention_downsampling = hourglass_attention_downsampling
@@ -106,8 +108,9 @@ class HourglassBlock(nn.Module):
                         self.d_model,
                         factor,
                         sampling_type="downsampling",
-                        use_full_attention=self.sampling_full_attention,
                         post_norm=self.sampling_post_norm,
+                        method_params=self.method_params,
+                        act_fun=self.act_fun,
                     )
                 )
         return attention_downsampling_layers
@@ -123,8 +126,9 @@ class HourglassBlock(nn.Module):
                         self.d_model,
                         factor,
                         sampling_type="upsampling",
-                        use_full_attention=self.sampling_full_attention,
                         post_norm=self.sampling_post_norm,
+                        method_params=self.method_params,
+                        act_fun=self.act_fun,
                     )
                 )
         return attention_upsampling_layers
@@ -207,7 +211,7 @@ class HourglassBlock(nn.Module):
 
             if self.attention_downsampling:
                 x_downsampled = x_downsampled + self.attention_downsampling_layers[i](
-                    x_downsampled, key=x, value=x
+                    x_downsampled, key_value=x
                 )
 
             x = dec(x_downsampled, causal=causal, inference=inference)
@@ -230,7 +234,7 @@ class HourglassBlock(nn.Module):
 
             if self.attention_upsampling:
                 x_upsampled = self.attention_upsampling_layers[i](
-                    x_upsampled, key=x, value=x
+                    x_upsampled, key_value=x
                 )
 
             x = dec(x_upsampled, causal=causal, inference=inference)
