@@ -46,7 +46,9 @@ class AttentionSampling(nn.Module):
             device="cuda" if torch.cuda.is_available() else "mps",
         )
 
-    def forward(self, query: torch.Tensor, key_value: torch.Tensor):
+    def forward(
+        self, query: torch.Tensor, key_value: torch.Tensor, causal: bool = True
+    ) -> torch.Tensor:
         # if self.method_params.method == "cosformer":
         #     query_length = query.size(1)
         #     key_value_length = key_value.size(1)
@@ -54,4 +56,4 @@ class AttentionSampling(nn.Module):
         #         query = query.repeat_interleave(self.factor, dim=1)
         #     elif query_length > key_value_length:
         #         key_value = key_value.repeat_interleave(self.factor, dim=1)
-        return self.attention(query, key_value, causal=True, inference=False)
+        return self.attention(query, key_value, causal=causal, inference=False)
