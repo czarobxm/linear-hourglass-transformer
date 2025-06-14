@@ -6,6 +6,7 @@ from typing import Dict, Any
 import torch
 from torch import nn
 
+from models.utils import parse_structure
 from conf.definitions.model import ModelCfg
 
 
@@ -78,7 +79,7 @@ class BaseModel(nn.Module):
 
         self.device = device
 
-        self.n_layers, self.sizes = self.parse_structure()
+        self.n_layers, self.sizes = parse_structure(structure=self.structure)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
@@ -110,17 +111,6 @@ class BaseModel(nn.Module):
             hourglass_sampling_post_norm=cfg_model.hourglass.sampling_post_norm,
             device=device,
         )
-
-    def parse_structure(self):
-        """Parse the structure string and return the number of layers and sizes."""
-        blocks = self.structure.split(",")
-        n_layers = []
-        sizes = []
-        for block in blocks:
-            n_l, size = block.split("x")
-            n_layers.append(int(n_l))
-            sizes.append(int(size))
-        return n_layers, sizes
 
     def get_hyperparams(self):
         """Return hyperparameters of the model."""
