@@ -164,10 +164,10 @@ class MambaHourglass(nn.Module):
                         rmsnorm=rmsnorm,
                         d_ssm=d_ssm,
                     ),
-                    attn_layer_idx=i,
+                    attn_layer_idx=None,
                     device=None,  # Device will be set later
                 )
-                for i, n_layer in enumerate(self.n_layers)
+                for _, n_layer in enumerate(self.n_layers)
             ]
         )
 
