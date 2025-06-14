@@ -209,7 +209,7 @@ class MambaHourglass(nn.Module):
             x = self.shift_right_layers[i](x)
             x_downsampled = downsample(x)
 
-            x = dec(x_downsampled, causal=causal, inference=inference)
+            x = dec(x_downsampled)
 
             if i < n_downsampling_layers - 1:
                 residuals.append(x)
@@ -227,6 +227,6 @@ class MambaHourglass(nn.Module):
             if self.upsampling_residual:
                 x_upsampled = residual + x_upsampled
 
-            x = dec(x_upsampled, causal=causal, inference=inference)
+            x = dec(x_upsampled)
 
         return x
