@@ -179,12 +179,14 @@ class MambaHourglass(nn.Module):
             if self.sizes[i] > self.sizes[i + 1]:
                 factor = self.sizes[i] // self.sizes[i + 1]
                 downsampling_layers.append(
-                    DownsamplingLayer(self.d_model, factor, self.downsampling_type)
+                    DownsamplingLayer(
+                        self.d_model, factor, self.hourglass_downsampling_type
+                    )
                 )
             else:
                 factor = self.sizes[i + 1] // self.sizes[i]
                 upsampling_layers.append(
-                    UpsamplingLayer(self.d_model, factor, self.upsampling_type)
+                    UpsamplingLayer(self.d_model, factor, self.hourglass_upsampling_type)
                 )
         return downsampling_layers, upsampling_layers
 
