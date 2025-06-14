@@ -156,7 +156,6 @@ class MambaHourglass(nn.Module):
                     n_layer=n_layer,
                     d_intermediate=d_state,
                     ssm_cfg=dict(
-                        d_model=d_model,
                         d_state=d_state,
                         d_conv=d_conv,
                         expand=expand,
