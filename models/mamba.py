@@ -107,6 +107,7 @@ class MambaBlock(nn.Module):
 class MambaHourglass(nn.Module):
     def __init__(
         self,
+        structure: str,
         d_model: int = 512,
         vocab_size: int = 256,
         d_state: int = 256,
@@ -121,6 +122,7 @@ class MambaHourglass(nn.Module):
         hourglass_downsampling_type: str = "linear",
     ):
         super().__init__()
+        self.n_layers, self.sizes = parse_structure(structure=structure)
         self.d_model = d_model
         self.vocab_size = vocab_size
         self.d_state = d_state
