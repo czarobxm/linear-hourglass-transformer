@@ -79,6 +79,7 @@ class MambaBlock(nn.Module):
     def forward(self, x, inference_params=None, **mixer_kwargs):
         hidden_states = x
         residual = None
+
         for layer in self.layers:
             hidden_states, residual = layer(
                 hidden_states, residual, inference_params=inference_params, **mixer_kwargs
@@ -147,7 +148,7 @@ class MambaHourglass(nn.Module):
                 MambaBlock(
                     d_model=d_model,
                     n_layer=n_layer,
-                    d_intermediate=d_state,
+                    d_intermediate=0,  # No MLP in Mamba
                     ssm_cfg=dict(
                         d_state=d_state,
                         d_conv=d_conv,
