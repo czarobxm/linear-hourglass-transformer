@@ -118,7 +118,10 @@ class MambaHourglass(nn.Module):
         hourglass_upsampling_residual: bool = True,
         hourglass_upsampling_type: str = "linear",
         hourglass_downsampling_type: str = "linear",
+        device: str = "cuda",
+        dtype: torch.dtype = torch.float32,
     ):
+        factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.n_layers, self.sizes = parse_structure(structure=structure)
         self.d_model = d_model
@@ -132,7 +135,7 @@ class MambaHourglass(nn.Module):
         self.hourglass_downsampling_type = hourglass_downsampling_type
 
         # Embedders
-        self.embedder = nn.Embedding(vocab_size, d_model)
+        self.embedder = nn.Embedding(vocab_size, d_model, **factory_kwargs)
 
         # Shift right
         self.shift_right = ShiftRight(shift=1)
