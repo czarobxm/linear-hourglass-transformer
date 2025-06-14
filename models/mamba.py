@@ -194,6 +194,7 @@ class MambaHourglass(nn.Module):
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
+        x = self.embedder(x)
         residuals = []
 
         n_downsampling_layers = len(self.downsampling_layers)
