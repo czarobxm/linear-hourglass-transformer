@@ -110,9 +110,10 @@ class MambaHourglass(nn.Module):
         structure: str,
         d_model: int = 512,
         vocab_size: int = 256,
-        d_state: int = 256,
+        d_state: int = 16,
+        d_intermediate: int = 0,
         d_conv: int = 4,
-        expand: int = 4,
+        expand: int = 2,
         rms_norm: bool = True,
         hourglass_upsampling_residual: bool = True,
         hourglass_upsampling_type: str = "linear",
@@ -148,7 +149,7 @@ class MambaHourglass(nn.Module):
                 MambaBlock(
                     d_model=d_model,
                     n_layer=n_layer,
-                    d_intermediate=0,  # No MLP in Mamba
+                    d_intermediate=d_intermediate,
                     ssm_cfg=dict(
                         d_state=d_state,
                         d_conv=d_conv,
