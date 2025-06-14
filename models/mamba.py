@@ -120,7 +120,7 @@ class MambaHourglass(nn.Module):
         hourglass_upsampling_type: str = "linear",
         hourglass_downsampling_type: str = "linear",
     ):
-        super.__init__()
+        super().__init__()
         self.d_model = d_model
         self.vocab_size = vocab_size
         self.d_state = d_state
