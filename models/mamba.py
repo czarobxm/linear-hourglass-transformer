@@ -9,9 +9,7 @@ from transformer.blocks.hourglass_block.utils import ShiftRight
 from transformer.blocks.hourglass_block.downsampling import DownsamplingLayer
 from transformer.blocks.hourglass_block.upsampling import UpsamplingLayer
 
-from mamba_ssm.models.config_mamba import MambaConfig
-from mamba_ssm.models.mixer_seq_simple import MixerModel, _init_weights, create_block
-from mamba_ssm.utils.generation import GenerationMixin
+from mamba_ssm.models.mixer_seq_simple import _init_weights, create_block
 
 try:
     from mamba_ssm.ops.triton.layer_norm import RMSNorm, layer_norm_fn, rms_norm_fn
@@ -49,7 +47,7 @@ class MambaBlock(nn.Module):
         self.layers = nn.ModuleList(
             [
                 create_block(
-                    d_model,
+                    d_model=d_model,
                     d_intermediate=d_intermediate,
                     ssm_cfg=ssm_cfg,
                     attn_layer_idx=attn_layer_idx,
@@ -157,9 +155,9 @@ class MambaHourglass(nn.Module):
                         d_state=d_state,
                         d_conv=d_conv,
                         expand=expand,
-                        rms_norm=rms_norm,
                         d_ssm=d_ssm,
                     ),
+                    rms_norm=rms_norm,
                     attn_layer_idx=None,
                     device=None,  # Device will be set later
                 )
