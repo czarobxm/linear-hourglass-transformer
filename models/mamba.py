@@ -113,7 +113,7 @@ class MambaHourglass(nn.Module):
         d_state: int = 256,
         d_conv: int = 4,
         expand: int = 4,
-        rmsnorm: bool = True,
+        rms_norm: bool = True,
         d_ssm: int = None,
         chunk_size: int = 256,
         hourglass_upsampling_residual: bool = True,
@@ -127,7 +127,7 @@ class MambaHourglass(nn.Module):
         self.d_state = d_state
         self.d_conv = d_conv
         self.expand = expand
-        self.rmsnorm = rmsnorm
+        self.rms_norm = rms_norm
         self.d_ssm = d_ssm
         self.chunk_size = chunk_size
         self.upsampling_residual = hourglass_upsampling_residual
@@ -157,7 +157,7 @@ class MambaHourglass(nn.Module):
                         d_state=d_state,
                         d_conv=d_conv,
                         expand=expand,
-                        rmsnorm=rmsnorm,
+                        rms_norm=rms_norm,
                         d_ssm=d_ssm,
                     ),
                     attn_layer_idx=None,
