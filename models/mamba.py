@@ -78,6 +78,7 @@ class MambaBlock(nn.Module):
 
     def forward(self, x, inference_params=None, **mixer_kwargs):
         hidden_states = x
+        residual = None
         for layer in self.layers:
             hidden_states, residual = layer(
                 hidden_states, residual, inference_params=inference_params, **mixer_kwargs
