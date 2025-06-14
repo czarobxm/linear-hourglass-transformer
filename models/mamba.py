@@ -133,6 +133,8 @@ class MambaHourglass(nn.Module):
         self.upsampling_residual = hourglass_upsampling_residual
         self.hourglass_upsampling_type = hourglass_upsampling_type
         self.hourglass_downsampling_type = hourglass_downsampling_type
+        self.device = device
+        self.dtype = dtype
 
         # Embedders
         self.embedder = nn.Embedding(vocab_size, d_model, **factory_kwargs)
@@ -160,11 +162,13 @@ class MambaHourglass(nn.Module):
                     ),
                     rms_norm=rms_norm,
                     attn_layer_idx=None,
-                    device=None,  # Device will be set later
+                    **factory_kwargs,
                 )
                 for _, n_layer in enumerate(self.n_layers)
             ]
         )
+
+        self.to(self.device)
 
     def _create_sampling_layers(self) -> nn.ModuleList:
         """Create downsampling and upsampling layers."""
