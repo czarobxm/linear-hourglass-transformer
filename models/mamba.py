@@ -196,7 +196,7 @@ class MambaHourglass(nn.Module):
 
         n_downsampling_layers = len(self.downsampling_layers)
 
-        x = self.decoder_chunks[0](x, causal=causal, inference=inference)
+        x = self.decoder_chunks[0](x)
         residuals.append(x)
 
         # Downsampling path
