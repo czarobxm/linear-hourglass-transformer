@@ -9,7 +9,12 @@ from transformer.blocks.hourglass_block.utils import ShiftRight
 from transformer.blocks.hourglass_block.downsampling import DownsamplingLayer
 from transformer.blocks.hourglass_block.upsampling import UpsamplingLayer
 
-from mamba_ssm.models.mixer_seq_simple import _init_weights, create_block
+from mamba_ssm.models.mixer_seq_simple import (
+    _init_weights,
+    create_block,
+    MambaLMHeadModel,
+    MambaConfig,
+)
 
 try:
     from mamba_ssm.ops.triton.layer_norm import RMSNorm, layer_norm_fn, rms_norm_fn
@@ -258,3 +263,60 @@ class MambaHourglass(nn.Module):
             x = dec(x_upsampled)
 
         return x
+
+
+class Mamba(nn.Module):
+    def __init__(
+        self,
+        structure: str,
+        d_model: int = 512,
+        vocab_size: int = 256,
+        d_state: int = 16,
+        d_intermediate: int = 0,
+        d_conv: int = 4,
+        expand: int = 2,
+        rms_norm: bool = True,
+        device: str = "cuda",
+        dtype: torch.dtype = torch.float32,
+    ):
+        factory_kwargs = {"device": device, "dtype": dtype}
+        super().__init__()
+        self.n_layers, self.sizes = parse_structure(structure=structure)
+        self.d_model = d_model
+        self.vocab_size = vocab_size
+        self.d_state = d_state
+        self.d_conv = d_conv
+        self.expand = expand
+        self.rms_norm = rms_norm
+        self.device = device
+        self.dtype = dtype
+
+        mamba_config = MambaConfig(
+            d_model=d_model,
+            d_intermediate=d_intermediate,
+            n_layer=self.n_layers[0],
+            vocab_size=vocab_size,
+            ssm_cfg=dict(d_state=d_state, d_conv=d_conv, expand=expand),
+            rms_norm=rms_norm,
+        )
+        self.mamba = MambaLMHeadModel(mamba_config, **factory_kwargs)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through the Mamba model."""
+        x = self.mamba(x)
+        return x.logits
+
+    @classmethod
+    def from_cfg(cls, cfg_model, vocab_size: int, device: str = "cuda"):
+        """Create Mamba from configuration."""
+        return Mamba(
+            structure=cfg_model.structure,
+            d_model=cfg_model.d_model,
+            vocab_size=vocab_size,
+            d_state=cfg_model.d_state,
+            d_intermediate=cfg_model.d_intermediate,
+            d_conv=cfg_model.d_conv,
+            expand=cfg_model.expand,
+            rms_norm=cfg_model.rms_norm,
+            device=device,
+        )

@@ -1,0 +1,11 @@
+type: mamba
+structure: 2x4096,4x2048,2x4096
+d_model: 512
+d_state: 16
+d_intermediate: 0
+d_conv: 4
+expand: 2
+rms_norm: true
+hourglass_upsampling_residual: true
+hourglass_downsampling_type: linear
+hourglass_upsampling_type: linear

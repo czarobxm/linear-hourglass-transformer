@@ -1,4 +1,4 @@
-from models import DecoderOnlyTransformer, ClassifierTransformer
+from models import DecoderOnlyTransformer, ClassifierTransformer, MambaHourglass, Mamba
 
 from models.base import BaseModel
 from conf.definitions import ModelCfg
@@ -14,5 +14,10 @@ def initialize_model(cfg_model: ModelCfg, vocab_size: int, device: str) -> BaseM
         return ClassifierTransformer.from_cfg(
             cfg_model, vocab_size=vocab_size, device=device
         )
+    if cfg_model.type == "mamba":
+        return Mamba.from_cfg(cfg_model, vocab_size=vocab_size, device=device)
+    if cfg_model.type == "mamba_hourglass":
+        MambaHourglass.from_cfg(cfg_model, vocab_size=vocab_size, device=device)
+
     else:
         raise ValueError(f"Model {cfg_model.type} not implemented.")
