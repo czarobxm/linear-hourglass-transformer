@@ -170,6 +170,24 @@ class MambaHourglass(nn.Module):
 
         self.to(self.device)
 
+    @classmethod
+    def from_cfg(cls, cfg_model, vocab_size: int, device: str = "cuda"):
+        """Create MambaHourglass from configuration."""
+        return MambaHourglass(
+            structure=cfg_model.structure,
+            d_model=cfg_model.d_model,
+            vocab_size=vocab_size,
+            d_state=cfg_model.d_state,
+            d_intermediate=cfg_model.d_intermediate,
+            d_conv=cfg_model.d_conv,
+            expand=cfg_model.expand,
+            rms_norm=cfg_model.rms_norm,
+            hourglass_upsampling_residual=cfg_model.hourglass_upsampling_residual,
+            hourglass_upsampling_type=cfg_model.hourglass_upsampling_type,
+            hourglass_downsampling_type=cfg_model.hourglass_downsampling_type,
+            device=device,
+        )
+
     def _create_sampling_layers(self) -> nn.ModuleList:
         """Create downsampling and upsampling layers."""
         downsampling_layers = nn.ModuleList()
