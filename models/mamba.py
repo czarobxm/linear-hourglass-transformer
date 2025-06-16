@@ -224,6 +224,7 @@ class MambaHourglass(nn.Module):
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
+        x = self.shift_right(x)
         x = self.embedder(x)
         residuals = []
 
@@ -291,6 +292,8 @@ class Mamba(nn.Module):
         self.device = device
         self.dtype = dtype
 
+        self.shift_right = ShiftRight(shift=1)
+
         mamba_config = MambaConfig(
             d_model=d_model,
             d_intermediate=d_intermediate,
@@ -303,6 +306,7 @@ class Mamba(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the Mamba model."""
+        x = self.shift_right(x)
         x = self.mamba(x)
         return x.logits
 
