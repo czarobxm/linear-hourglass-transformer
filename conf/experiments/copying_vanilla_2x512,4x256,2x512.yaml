@@ -3,7 +3,7 @@ hydra:
     - file://conf
 
 defaults:
-  - model: sequence_modelling_vanilla_2x4096,4x2048,2x4096
+  - model: sequence_modelling_vanilla_2x512,4x256,2x512
   - training: default
   - neptune: default
   - dataset: copying/copying_512
