@@ -1,5 +1,5 @@
 _target_: data.copying.Copying.create_split_datasets
-use_validation: true
+use_validation: false
 path: ./datastorage/copying
 max_length: 50
 shuffle: true
