@@ -4,6 +4,6 @@ path: ./datastorage/copying
 max_length: 50
 shuffle: true
 vocab_size: 40
-sequence_length: 512,20,10000 # train, test_start, test_stop
+sequence_length: 512,20,8192 # train, test_start, test_stop
 num_samples: 300000,1 # train samples, test samples
-create_artificial_datasets: false
+create_artificial_datasets: true
