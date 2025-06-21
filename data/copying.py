@@ -145,6 +145,8 @@ class Copying(BaseArtificialDataset):
 
         if isinstance(kwargs[1], list):
             for kwg in kwargs[1]:
+                if Path(create_path(path, "inputs", **kwg)).exists():
+                    continue
                 inputs, labels = generate_copying_data(**kwg)
                 torch.save(inputs, create_path(path, "inputs", **kwg))
                 torch.save(labels, create_path(path, "labels", **kwg))
