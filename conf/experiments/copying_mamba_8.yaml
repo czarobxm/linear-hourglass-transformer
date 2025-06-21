@@ -6,7 +6,7 @@ defaults:
   - model: sequence_modelling_mamba_8
   - training: default
   - neptune: default
-  - dataset: enwik9/enwik9_4096
+  - dataset: copying/copying_512
   - _self_
 
 tokenizer: custom_char_level
