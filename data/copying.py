@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import torch
+from torch.nn.utils.rnn import pad_sequence
 from transformers import PreTrainedTokenizer
 
 from data.base_dataset import BaseArtificialDataset
@@ -44,37 +45,28 @@ def generate_copying_data(
     The intput sequence length is between 60% and 100% of the sequence_length parameter and
     the length distribution follows the uniform distribution.
     """
-    min_sequence_length = int(sequence_length * 0.6)
     inputs_length = 2 * sequence_length + 2
 
     all_inputs = []
     all_labels = []
 
-    for seq_len in range(min_sequence_length, sequence_length + 1):
-        # print(seq_len)
-        num_samples_per_length = max(
-            1, int(num_samples / (sequence_length - min_sequence_length + 1))
-        )
+    random_sequence = torch.randint(
+        low=2, high=vocab_size, size=(num_samples, sequence_length)
+    )
+    mask_matrix = torch.zeros((num_samples, sequence_length)).long() - 100
+    separator = torch.zeros((num_samples, 1)).long()
 
-        random_sequence = torch.randint(
-            low=2, high=vocab_size, size=(num_samples_per_length, seq_len)
-        )
-        mask_matrix = torch.zeros((num_samples_per_length, seq_len)).long() - 100
-        separator = torch.zeros((num_samples_per_length, 1)).long()
+    inputs_not_padded = torch.cat([random_sequence, separator, random_sequence], dim=1)
+    labels_not_padded = torch.cat([mask_matrix, separator, random_sequence], dim=1)
 
-        inputs_not_padded = torch.cat(
-            [random_sequence, separator, random_sequence], dim=1
-        )
-        labels_not_padded = torch.cat([mask_matrix, separator, random_sequence], dim=1)
+    inputs = torch.ones((num_samples, inputs_length)).long()
+    labels = torch.ones((num_samples, inputs_length)).long() * -100
 
-        inputs = torch.ones((num_samples_per_length, inputs_length)).long()
-        labels = torch.ones((num_samples_per_length, inputs_length)).long() * -100
+    inputs[:, : 2 * sequence_length + 1] = inputs_not_padded
+    labels[:, : 2 * sequence_length + 1] = labels_not_padded
 
-        inputs[:, : 2 * seq_len + 1] = inputs_not_padded
-        labels[:, : 2 * seq_len + 1] = labels_not_padded
-
-        all_inputs.append(inputs)
-        all_labels.append(labels)
+    all_inputs.append(inputs)
+    all_labels.append(labels)
 
     return torch.cat(all_inputs, dim=0), torch.cat(all_labels, dim=0)
 
@@ -144,16 +136,26 @@ class Copying(BaseArtificialDataset):
         torch.save(labels, create_path(path, "labels", **kwargs[0]))
 
         if isinstance(kwargs[1], list):
+            all_inputs, all_labels = [], []
             for kwg in kwargs[1]:
                 if Path(create_path(path, "inputs", **kwg)).exists():
                     continue
                 inputs, labels = generate_copying_data(**kwg)
-                torch.save(inputs, create_path(path, "inputs", **kwg))
-                torch.save(labels, create_path(path, "labels", **kwg))
+                all_inputs.append(inputs)
+                all_labels.append(labels)
+
+            all_inputs = [t.squeeze(0) for t in all_inputs]
+            all_labels = [t.squeeze(0) for t in all_labels]
+
+            all_inputs = pad_sequence(all_inputs, batch_first=True, padding_value=-100)
+            all_labels = pad_sequence(all_labels, batch_first=True, padding_value=-100)
+
+            torch.save(all_inputs, create_path(path, "inputs_test", **kwargs[0]))
+            torch.save(all_labels, create_path(path, "labels_test", **kwargs[0]))
         else:
             inputs, labels = generate_copying_data(**kwargs[1])
-            torch.save(inputs, create_path(path, "inputs", **kwargs[1]))
-            torch.save(labels, create_path(path, "labels", **kwargs[1]))
+            torch.save(inputs, create_path(path, "inputs_test", **kwargs[0]))
+            torch.save(labels, create_path(path, "labels_test", **kwargs[0]))
 
     @classmethod
     def load_raw_splits(cls, path: str, **kwargs):
@@ -170,27 +172,12 @@ class Copying(BaseArtificialDataset):
             create_path(path=path, inputs_or_labels="labels", **kwargs[0]),
         )
 
-        if isinstance(kwargs[1], list):
-            test_inputs = []
-            test_labels = []
-            for kwg in kwargs[1]:
-                test_inputs.append(
-                    torch.load(
-                        create_path(path=path, inputs_or_labels="inputs", **kwg),
-                    )
-                )
-                test_labels.append(
-                    torch.load(
-                        create_path(path=path, inputs_or_labels="labels", **kwg),
-                    )
-                )
-        else:
-            test_inputs = torch.load(
-                create_path(path=path, inputs_or_labels="inputs", **kwargs[2]),
-            )
-            test_labels = torch.load(
-                create_path(path=path, inputs_or_labels="labels", **kwargs[2]),
-            )
+        test_inputs = torch.load(
+            create_path(path=path, inputs_or_labels="inputs_test", **kwargs[0]),
+        )
+        test_labels = torch.load(
+            create_path(path=path, inputs_or_labels="labels_test", **kwargs[0]),
+        )
 
         train_length = len(train_inputs)
         return {
@@ -202,11 +189,8 @@ class Copying(BaseArtificialDataset):
                 "inputs": train_inputs[int(train_length * 0.8) :],
                 "labels": train_labels[int(train_length * 0.8) :],
             },
-            "test": [
-                {
-                    "inputs": test_inputs[i],
-                    "labels": test_labels[i],
-                }
-                for i in range(1, len(test_inputs))
-            ],
+            "test": {
+                "inputs": test_inputs,
+                "labels": test_labels,
+            },
         }
