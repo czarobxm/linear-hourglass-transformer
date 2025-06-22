@@ -57,7 +57,7 @@ def generate_copying_data(
     separator = torch.zeros((num_samples, 1)).long()
 
     inputs_not_padded = torch.cat([random_sequence, separator, random_sequence], dim=1)
-    labels_not_padded = torch.cat([mask_matrix, separator, random_sequence], dim=1)
+    labels_not_padded = torch.cat([mask_matrix, separator - 100, random_sequence], dim=1)
 
     inputs = torch.ones((num_samples, inputs_length)).long()
     labels = torch.ones((num_samples, inputs_length)).long() * -100
@@ -147,7 +147,7 @@ class Copying(BaseArtificialDataset):
             all_inputs = [t.squeeze(0) for t in all_inputs]
             all_labels = [t.squeeze(0) for t in all_labels]
 
-            all_inputs = pad_sequence(all_inputs, batch_first=True, padding_value=0)
+            all_inputs = pad_sequence(all_inputs, batch_first=True, padding_value=1)
             all_labels = pad_sequence(all_labels, batch_first=True, padding_value=-100)
 
             torch.save(all_inputs, create_path(path, "inputs_test", **kwargs[0]))
