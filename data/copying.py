@@ -144,8 +144,8 @@ class Copying(BaseArtificialDataset):
                 all_inputs.append(inputs)
                 all_labels.append(labels)
 
-            all_inputs = [t.squeeze(0) for t in all_inputs]
-            all_labels = [t.squeeze(0) for t in all_labels]
+            all_inputs = [t.squeeze(0) if t.dim() > 1 else t for t in all_inputs]
+            all_labels = [t.squeeze(0) if t.dim() > 1 else t for t in all_labels]
 
             all_inputs = pad_sequence(all_inputs, batch_first=True, padding_value=1)
             all_labels = pad_sequence(all_labels, batch_first=True, padding_value=-100)
