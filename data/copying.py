@@ -3,10 +3,60 @@
 from pathlib import Path
 
 import torch
-from torch.nn.utils.rnn import pad_sequence
+import torch.nn.functional as F
+
 from transformers import PreTrainedTokenizer
 
 from data.base_dataset import BaseArtificialDataset
+
+
+def pad_and_concat_tensors(tensor_list, value):
+    """
+    Pad tensors to the maximum width and concatenate them along the batch dimension.
+
+    Args:
+        tensor_list: List of 1D or 2D tensors where:
+                    - 1D tensors: shape (seq_len,) - will be treated as single batch
+                    - 2D tensors: shape (batch_size, seq_len) - multiple batches
+        debug: Print shapes for debugging
+
+    Returns:
+        torch.Tensor: Concatenated tensor with all tensors padded to max width
+    """
+    # Convert 1D tensors to 2D by adding batch dimension
+    processed_tensors = []
+    for tensor in tensor_list:
+        if tensor.dim() == 1:
+            # Shape (seq_len,) -> (1, seq_len)
+            processed_tensors.append(tensor.unsqueeze(0))
+        elif tensor.dim() == 2:
+            # Already (batch_size, seq_len)
+            processed_tensors.append(tensor)
+        else:
+            raise ValueError(
+                f"Expected 1D or 2D tensors, got {tensor.dim()}D tensor with shape {tensor.shape}"
+            )
+
+    # Find the maximum sequence length (dimension 1)
+    max_seq_len = max(tensor.size(1) for tensor in processed_tensors)
+
+    # Pad each tensor to max_seq_len
+    padded_tensors = []
+    for i, tensor in enumerate(processed_tensors):
+        current_seq_len = tensor.size(1)
+        if current_seq_len < max_seq_len:
+            # Pad the sequence dimension (last dimension)
+            # (left_pad, right_pad) for the sequence dimension
+            padding = (0, max_seq_len - current_seq_len)
+            padded_tensor = F.pad(tensor, padding, "constant", value)
+        else:
+            padded_tensor = tensor
+        padded_tensors.append(padded_tensor)
+
+    # Concatenate along the batch dimension (dimension 0)
+    result = torch.cat(padded_tensors, dim=0)
+
+    return result
 
 
 def process_kwargs(kwargs):
@@ -144,11 +194,8 @@ class Copying(BaseArtificialDataset):
                 all_inputs.append(inputs)
                 all_labels.append(labels)
 
-            all_inputs = [t.squeeze(0) if t.dim() > 1 else t for t in all_inputs]
-            all_labels = [t.squeeze(0) if t.dim() > 1 else t for t in all_labels]
-
-            all_inputs = pad_sequence(all_inputs, batch_first=True, padding_value=1)
-            all_labels = pad_sequence(all_labels, batch_first=True, padding_value=-100)
+            all_inputs = pad_and_concat_tensors(all_inputs, value=1)
+            all_labels = pad_and_concat_tensors(all_labels, value=-100)
 
             torch.save(all_inputs, create_path(path, "inputs_test", **kwargs[0]))
             torch.save(all_labels, create_path(path, "labels_test", **kwargs[0]))
