@@ -93,10 +93,9 @@ def train_one_batch(
         optimizer.zero_grad()
 
     # Compute metrics
-    correct = (outputs.argmax(-1) == targets).sum().item()
-    total = outputs.shape[0]
-
-    return loss.item(), correct, total
+    mask = targets != -100
+    correct = (outputs[mask].argmax(-1) == targets[mask]).sum().item()
+    return loss.item(), correct, mask.sum().item()
 
 
 def train_one_epoch(
@@ -210,8 +209,9 @@ def evaluate_one_batch(
     # Compute loss
     loss = loss_fn(outputs, targets)
     # Compute metrics
-    correct = (outputs.argmax(-1) == targets).sum().item()
-    return loss.item(), correct, outputs.shape[0]
+    mask = targets != -100
+    correct = (outputs[mask].argmax(-1) == targets[mask]).sum().item()
+    return loss.item(), correct, mask.sum().item()
 
 
 def evaluate_one_epoch(
