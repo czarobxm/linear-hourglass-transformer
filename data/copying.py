@@ -71,7 +71,6 @@ def process_kwargs(kwargs):
         train_kwargs["sequence_length"] = int(train)
         train_kwargs["num_samples"] = int(train_samples)
 
-        test_kwargs = kwargs.copy()
         test_kwargs = []
         for value in range(test_start, test_stop + 1, 2):
             kwg = kwargs.copy()
@@ -188,8 +187,6 @@ class Copying(BaseArtificialDataset):
         if isinstance(kwargs[1], list):
             all_inputs, all_labels = [], []
             for kwg in kwargs[1]:
-                if Path(create_path(path, "inputs", **kwg)).exists():
-                    continue
                 inputs, labels = generate_copying_data(**kwg)
                 all_inputs.append(inputs)
                 all_labels.append(labels)
