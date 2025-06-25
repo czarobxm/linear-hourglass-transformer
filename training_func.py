@@ -225,6 +225,7 @@ def evaluate_one_epoch(
     running_vloss = 0
     correct = total = 0
 
+    model.eval()
     with torch.no_grad():
         for vdata in loader:
             vloss, batch_correct, batch_total = evaluate_one_batch(
