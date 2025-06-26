@@ -229,7 +229,7 @@ class Copying(BaseArtificialDataset):
                 "inputs": train_inputs[: int(train_length)],
                 "labels": train_labels[: int(train_length)],
             },
-            "val": {"inputs": None, "labels": None},
+            "val": {"inputs": train_inputs, "labels": train_labels},
             "test": {
                 "inputs": test_inputs,
                 "labels": test_labels,
