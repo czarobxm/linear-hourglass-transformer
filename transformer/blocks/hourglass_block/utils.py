@@ -32,8 +32,6 @@ class ShiftRight(nn.Module):
         Raises:
             ValueError: If input tensor is not 2D or 3D
         """
-        if not self.training:
-            return x
 
         if x.ndim not in (2, 3):
             raise ValueError("Input tensor must be 2D or 3D.")
