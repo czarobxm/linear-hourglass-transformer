@@ -42,7 +42,7 @@ def pad_and_concat_tensors(tensor_list, value):
 
     # Pad each tensor to max_seq_len
     padded_tensors = []
-    for i, tensor in enumerate(processed_tensors):
+    for _, tensor in enumerate(processed_tensors):
         current_seq_len = tensor.size(1)
         if current_seq_len < max_seq_len:
             # Pad the sequence dimension (last dimension)
@@ -226,12 +226,8 @@ class Copying(BaseArtificialDataset):
         train_length = len(train_inputs)
         return {
             "train": {
-                "inputs": train_inputs[: int(train_length * 0.8)],
-                "labels": train_labels[: int(train_length * 0.8)],
-            },
-            "val": {
-                "inputs": train_inputs[int(train_length * 0.8) :],
-                "labels": train_labels[int(train_length * 0.8) :],
+                "inputs": train_inputs[: int(train_length)],
+                "labels": train_labels[: int(train_length)],
             },
             "test": {
                 "inputs": test_inputs,
