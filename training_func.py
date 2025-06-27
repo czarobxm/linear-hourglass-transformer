@@ -236,7 +236,7 @@ def evaluate_one_epoch(
             total += batch_total
             run[f"metrics/{stage}_loss"].append(vloss)
             run[f"metrics/{stage}_acc"].append(batch_correct / batch_total)
-            run[f"metrics/{stage}_seq_len"].append(vdata[0].shape[1])
+            run[f"metrics/{stage}_seq_len"].append((vdata[1] != -100).sum().item())
 
     avg_loss = running_vloss / len(loader)
     accuracy = correct / total
