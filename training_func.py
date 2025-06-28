@@ -177,6 +177,7 @@ def train_one_epoch(
         correct += cor
         total += tot
         lr = optimizer.param_groups[0]["lr"]
+        run[f"metrics/train_seq_len"].append((inputs[1] != -100).sum().item())
 
         log_batch_neptune(
             stage="train",
