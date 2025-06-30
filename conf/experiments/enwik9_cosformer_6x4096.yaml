@@ -1,0 +1,15 @@
+hydra:
+  searchpath:
+    - file://conf
+
+defaults:
+  - model: sequence_modelling_cosformer_6x4096
+  - training: default
+  - neptune: default
+  - dataset: enwik9/enwik9_4096
+  - _self_
+
+tokenizer: custom_char_level
+task: sequence_modelling
+device: cuda
+seed: 47

@@ -3,7 +3,7 @@ defaults:
   - hourglass: default
 
 type: sequence_modelling
-structure: 8x512
+structure: 1x128,4x64,1x128
 pos_enc_type: none
 use_embedding: true
 num_classes: null

@@ -3,10 +3,10 @@ hydra:
     - file://conf
 
 defaults:
-  - model: sequence_modelling_cosformer_8x50
+  - model: sequence_modelling_mamba_1x4x1
   - training: default
   - neptune: default
-  - dataset: copying/copying_50
+  - dataset: copying/copying_128
   - _self_
 
 tokenizer: custom_char_level

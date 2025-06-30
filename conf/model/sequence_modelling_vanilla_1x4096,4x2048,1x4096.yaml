@@ -1,9 +1,9 @@
 defaults:
-  - mha: cosformer
+  - mha: vanilla
   - hourglass: default
 
 type: sequence_modelling
-structure: 2x50,4x25,2x50
-pos_enc_type: none
+structure: 1x4096,4x2048,1x4096
+pos_enc_type: learnable
 use_embedding: true
 num_classes: null

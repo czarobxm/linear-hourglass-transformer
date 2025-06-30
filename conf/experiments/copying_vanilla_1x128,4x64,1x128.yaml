@@ -1,0 +1,15 @@
+hydra:
+  searchpath:
+    - file://conf
+
+defaults:
+  - model: sequence_modelling_vanilla_1x128,4x64,1x128
+  - training: default
+  - neptune: default
+  - dataset: copying/copying_128
+  - _self_
+
+tokenizer: custom_char_level
+task: sequence_modelling
+device: cuda
+seed: 47
