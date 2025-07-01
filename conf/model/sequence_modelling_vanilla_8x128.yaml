@@ -1,0 +1,9 @@
+defaults:
+  - mha: vanilla
+  - hourglass: default
+
+type: sequence_modelling
+structure: 8x128
+pos_enc_type: none
+use_embedding: true
+num_classes: null
