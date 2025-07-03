@@ -3,7 +3,7 @@ hydra:
     - file://conf
 
 defaults:
-  - model: sequence_modelling_mamba_14
+  - model: sequence_modelling_mamba_16
   - training: default
   - neptune: default
   - dataset: copying/copying_128
