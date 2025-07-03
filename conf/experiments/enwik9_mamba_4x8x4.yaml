@@ -3,7 +3,7 @@ hydra:
     - file://conf
 
 defaults:
-  - model: sequence_modelling_mamba_14
+  - model: sequence_modelling_mamba_4x8x4
   - training: default
   - neptune: default
   - dataset: enwik9/enwik9_4096
