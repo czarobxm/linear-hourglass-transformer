@@ -1,0 +1,8 @@
+type: mamba
+structure: 14x4096
+d_model: 512
+d_state: 16
+d_intermediate: 0
+d_conv: 4
+expand: 4
+rms_norm: true
