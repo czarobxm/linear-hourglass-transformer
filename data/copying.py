@@ -72,7 +72,7 @@ def process_kwargs(kwargs):
         train_kwargs["num_samples"] = int(train_samples)
 
         test_kwargs = []
-        for value in range(test_start, test_stop + 1, 2):
+        for value in range(test_start, test_stop + 1, 1):
             kwg = kwargs.copy()
             kwg["sequence_length"] = int(value)
             kwg["num_samples"] = int(test_samples)
