@@ -72,7 +72,12 @@ class LinearPool(nn.Module):
         """
         batch_size, seq_len, d_model = x.size()
         x = torch.cat(
-            [x, torch.zeros(batch_size, seq_len % self.downsampling_factor, d_model)],
+            [
+                x,
+                torch.zeros(batch_size, seq_len % self.downsampling_factor, d_model).to(
+                    x.device
+                ),
+            ],
             dim=1,
         )
         new_seq_len = seq_len // self.downsampling_factor
