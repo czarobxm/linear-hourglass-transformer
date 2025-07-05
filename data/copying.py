@@ -169,6 +169,7 @@ class Copying(BaseArtificialDataset):
         return self.data["inputs"].shape[0]
 
     def __getitem__(self, index):
+        index = self.shuffled_order[index]
         return (
             self.data["inputs"][index].to(self.device),
             self.data["labels"][index].to(self.device),
@@ -180,9 +181,23 @@ class Copying(BaseArtificialDataset):
             path = Path("./datastorage/sequence_modelling")
         kwargs = process_kwargs(kwargs)
 
-        inputs, labels = generate_copying_data(**kwargs[0])
-        torch.save(inputs, create_path(path, "inputs", **kwargs[0]))
-        torch.save(labels, create_path(path, "labels", **kwargs[0]))
+        kwg_1 = kwargs[0].copy()
+        kwg_1["num_samples"] = int(kwg_1["num_samples"] / 2)
+        kwg_2 = kwargs[0].copy()
+        kwg_2["num_samples"] = int(kwg_2["num_samples"] / 2)
+        kwg_2["sequence_length"] = int(kwg_2["sequence_length"] + 1)
+
+        inputs_1, labels_1 = generate_copying_data(**kwg_1)
+        inputs_2, labels_2 = generate_copying_data(**kwg_2)
+
+        torch.save(
+            pad_and_concat_tensors([inputs_1, inputs_2], value=1),
+            create_path(path, "inputs", **kwargs[0]),
+        )
+        torch.save(
+            pad_and_concat_tensors([labels_1, labels_2], value=-100),
+            create_path(path, "labels", **kwargs[0]),
+        )
 
         if isinstance(kwargs[1], list):
             all_inputs, all_labels = [], []
