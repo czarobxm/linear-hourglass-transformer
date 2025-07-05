@@ -90,7 +90,7 @@ def generate_selective_copying_data(
 
     random_integers = torch.randint(2, vocab_size, (num_samples, num_tokens_to_memorize))
     zero_matrix = torch.zeros((num_samples, context_len)).long()
-    ones = torch.ones((num_samples, 1)).long()
+    ones = torch.ones((num_samples, 2)).long()
     positions = torch.rand(num_samples, context_len).argsort(dim=1)[
         :, :num_tokens_to_memorize
     ]  # Get first `elems_to_copy` indices
@@ -111,7 +111,7 @@ def generate_selective_copying_data(
     )
     labels = torch.cat(
         [
-            torch.ones((num_samples, context_len + 1)).long() * -100,
+            torch.ones((num_samples, context_len + 2)).long() * -100,
             random_integers[:, :query_len],
         ],
         dim=1,

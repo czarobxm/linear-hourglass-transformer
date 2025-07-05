@@ -230,17 +230,13 @@ class HourglassBlock(nn.Module):
             x_upsampled = upsample(x)
 
             if self.upsampling_residual:
-                x_upsampled = residual + x_upsampled[:, : residual.size(1), :]
+                x_upsampled = residual + x_upsampled
 
             if self.attention_upsampling:
-                x_upsampled = x_upsampled[
-                    :, : residual.size(1), :
-                ] + self.attention_upsampling_layers[i](
-                    x_upsampled[:, : residual.size(1), :], key_value=x, causal=causal
+                x_upsampled = x_upsampled + self.attention_upsampling_layers[i](
+                    x_upsampled, key_value=x, causal=causal
                 )
 
-            x = dec(
-                x_upsampled[:, : residual.size(1), :], causal=causal, inference=inference
-            )
+            x = dec(x_upsampled, causal=causal, inference=inference)
 
         return x
