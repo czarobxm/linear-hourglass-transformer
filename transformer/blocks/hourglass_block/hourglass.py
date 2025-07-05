@@ -193,12 +193,15 @@ class HourglassBlock(nn.Module):
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
         residuals = []
+        missing_tokens_count_list = []
 
         n_downsampling_layers = len(self.downsampling_layers)
 
         x = self.decoder_chunks[0](x, causal=causal, inference=inference)
 
-        if x.size(1) % self.downsampling_layers[0].factor != 0:
+        missing_tokens_count = x.size(1) % self.downsampling_layers[0].factor
+        missing_tokens_count_list.append(missing_tokens_count)
+        if missing_tokens_count != 0:
             x = torch.cat(
                 [
                     x,
@@ -220,13 +223,15 @@ class HourglassBlock(nn.Module):
             )
         ):
             x = self.shift_right_layers[i](x)
-            if x.size(1) % downsample.factor != 0:
+            missing_tokens_count = x.size(1) % downsample.factor
+            missing_tokens_count_list.append(missing_tokens_count)
+            if missing_tokens_count != 0:
                 x = torch.cat(
                     [
                         x,
-                        torch.zeros(
-                            x.size(0), x.size(1) % downsample.factor, x.size(2)
-                        ).to(x.device),
+                        torch.zeros(x.size(0), missing_tokens_count, x.size(2)).to(
+                            x.device
+                        ),
                     ],
                     dim=1,
                 )
@@ -243,11 +248,12 @@ class HourglassBlock(nn.Module):
                 residuals.append(x)
 
         # Upsampling path
-        for i, (dec, upsample, residual) in enumerate(
+        for i, (dec, upsample, residual, missing_token_count) in enumerate(
             zip(
                 self.decoder_chunks[n_downsampling_layers + 1 :],
                 self.upsampling_layers,
                 reversed(residuals),
+                reversed(missing_tokens_count_list),
             )
         ):
             x_upsampled = upsample(x)
@@ -260,7 +266,8 @@ class HourglassBlock(nn.Module):
                     x_upsampled, key_value=x, causal=causal
                 )
 
-            x_upsampled = x_upsampled[:, : -(x_upsampled.size(1) % upsample.factor), :]
+            if missing_token_count != 0:
+                x_upsampled = x_upsampled[:, :missing_tokens_count, :]
             x = dec(x_upsampled, causal=causal, inference=inference)
 
         return x
