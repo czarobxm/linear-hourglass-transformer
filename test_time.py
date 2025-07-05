@@ -42,3 +42,7 @@ def main(cfg: ExperimentCfg) -> None:
         print(
             f"Mean time per forward step for seq_len {seq_len}: {sum(inference_times) / len(inference_times)} ms"
         )
+
+
+if __name__ == "__main__":
+    main()
