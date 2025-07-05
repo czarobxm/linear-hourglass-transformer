@@ -3,45 +3,81 @@
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 from transformers import PreTrainedTokenizer
 
 from data.base_dataset import BaseArtificialDataset
 
 
-def process_kwargs(kwargs):
-    print(kwargs)
-    length = None
-    is_list = None
-    for key, value in kwargs.items():
-        if is_list is None:
-            is_list = isinstance(value, list)
+def pad_and_concat_tensors(tensor_list, value):
+    """
+    Pad tensors to the maximum width and concatenate them along the batch dimension.
 
-        if length is None:
-            print(key, value, type(value), isinstance(value, list) == is_list)
-            length = len(value)
+    Args:
+        tensor_list: List of 1D or 2D tensors where:
+                    - 1D tensors: shape (seq_len,) - will be treated as single batch
+                    - 2D tensors: shape (batch_size, seq_len) - multiple batches
+        debug: Print shapes for debugging
 
-        if len(value) != length:
+    Returns:
+        torch.Tensor: Concatenated tensor with all tensors padded to max width
+    """
+    # Convert 1D tensors to 2D by adding batch dimension
+    processed_tensors = []
+    for tensor in tensor_list:
+        if tensor.dim() == 1:
+            # Shape (seq_len,) -> (1, seq_len)
+            processed_tensors.append(tensor.unsqueeze(0))
+        elif tensor.dim() == 2:
+            # Already (batch_size, seq_len)
+            processed_tensors.append(tensor)
+        else:
             raise ValueError(
-                f"All lists must have the same length. "
-                f"Expected {length}, but got {len(value)} for key: {key}"
+                f"Expected 1D or 2D tensors, got {tensor.dim()}D tensor with shape {tensor.shape}"
             )
 
-        if isinstance(value, list) ^ is_list:  # XOR gate
-            raise ValueError(
-                f"All lists must be of the same type. "
-                f"Expected list, but got {type(value)} for key: {key}"
-            )
+    # Find the maximum sequence length (dimension 1)
+    max_seq_len = max(tensor.size(1) for tensor in processed_tensors)
 
-    if not is_list:
-        return [kwargs]
+    # Pad each tensor to max_seq_len
+    padded_tensors = []
+    for _, tensor in enumerate(processed_tensors):
+        current_seq_len = tensor.size(1)
+        if current_seq_len < max_seq_len:
+            # Pad the sequence dimension (last dimension)
+            # (left_pad, right_pad) for the sequence dimension
+            padding = (0, max_seq_len - current_seq_len)
+            padded_tensor = F.pad(tensor, padding, "constant", value)
+        else:
+            padded_tensor = tensor
+        padded_tensors.append(padded_tensor)
 
-    length = len(next(iter(kwargs.values())))  # Get the length of the lists
-    result = []
+    # Concatenate along the batch dimension (dimension 0)
+    result = torch.cat(padded_tensors, dim=0)
 
-    for i in range(length):
-        entry = {key: value[i] for key, value in kwargs.items()}
-        result.append(entry)
     return result
+
+
+def process_kwargs(kwargs):
+    if isinstance(kwargs["query_len"], str) and isinstance(kwargs["num_samples"], str):
+        train_samples, test_samples = kwargs["num_samples"].split(",")
+        train, test_start, test_stop = kwargs["query_len"].split(",")
+        train, test_start, test_stop = int(train), int(test_start), int(test_stop)
+
+        train_kwargs = kwargs.copy()
+        train_kwargs["num_samples"] = int(train_samples)
+        train_kwargs["query_len"] = int(train)
+        train_kwargs["context_len"] = 2 * int(train)
+
+        test_kwargs = []
+        for value in range(test_start, test_stop + 1, 2):
+            kwg = kwargs.copy()
+            kwg["query_len"] = int(value)
+            kwg["num_samples"] = int(test_samples)
+            kwg["context_len"] = 2 * int(value)
+            test_kwargs.append(kwg)
+        return train_kwargs, test_kwargs
+    return kwargs, kwargs
 
 
 def generate_selective_copying_data(
@@ -50,10 +86,11 @@ def generate_selective_copying_data(
     vocab_size: int,
     num_samples: int,
 ):
-    num_tokens_to_memorize = int(context_len * 0.6)
+    num_tokens_to_memorize = int(context_len * 0.5)
 
-    random_integers = torch.randint(1, vocab_size, (num_samples, num_tokens_to_memorize))
+    random_integers = torch.randint(2, vocab_size, (num_samples, num_tokens_to_memorize))
     zero_matrix = torch.zeros((num_samples, context_len)).long()
+    ones = torch.ones((num_samples, 1)).long()
     positions = torch.rand(num_samples, context_len).argsort(dim=1)[
         :, :num_tokens_to_memorize
     ]  # Get first `elems_to_copy` indices
@@ -67,13 +104,14 @@ def generate_selective_copying_data(
     inputs = torch.cat(
         [
             zero_matrix,
-            torch.zeros((num_samples, num_tokens_to_memorize)).long() + vocab_size + 1,
+            ones,
+            random_integers,
         ],
         dim=1,
     )
     labels = torch.cat(
         [
-            torch.ones((num_samples, context_len)).long() * -100,
+            torch.ones((num_samples, context_len + 1)).long() * -100,
             random_integers[:, :query_len],
         ],
         dim=1,
@@ -144,10 +182,27 @@ class SelectiveCopying(BaseArtificialDataset):
         if path is None:
             path = Path("./datastorage/sequence_modelling")
         kwargs = process_kwargs(kwargs)
-        for kwg in kwargs:
-            inputs, labels = generate_selective_copying_data(**kwg)
-            torch.save(inputs, create_path(path, "inputs", **kwg))
-            torch.save(labels, create_path(path, "labels", **kwg))
+
+        inputs, labels = generate_selective_copying_data(**kwargs[0])
+        torch.save(inputs, create_path(path, "inputs", **kwargs[0]))
+        torch.save(labels, create_path(path, "labels", **kwargs[0]))
+
+        if isinstance(kwargs[1], list):
+            all_inputs, all_labels = [], []
+            for kwg in kwargs[1]:
+                inputs, labels = generate_selective_copying_data(**kwg)
+                all_inputs.append(inputs)
+                all_labels.append(labels)
+
+            all_inputs = pad_and_concat_tensors(all_inputs, value=1)
+            all_labels = pad_and_concat_tensors(all_labels, value=-100)
+
+            torch.save(all_inputs, create_path(path, "inputs_test", **kwargs[0]))
+            torch.save(all_labels, create_path(path, "labels_test", **kwargs[0]))
+        else:
+            inputs, labels = generate_selective_copying_data(**kwargs[1])
+            torch.save(inputs, create_path(path, "inputs_test", **kwargs[0]))
+            torch.save(labels, create_path(path, "labels_test", **kwargs[0]))
 
     @classmethod
     def load_raw_splits(cls, path: str, **kwargs):
@@ -157,55 +212,29 @@ class SelectiveCopying(BaseArtificialDataset):
         kwargs.pop("use_validation")
         kwargs = process_kwargs(kwargs)
 
-        print(kwargs)
+        train_inputs = torch.load(
+            create_path(path=path, inputs_or_labels="inputs", **kwargs[0]),
+        )
+        train_labels = torch.load(
+            create_path(path=path, inputs_or_labels="labels", **kwargs[0]),
+        )
 
-        if isinstance(kwargs, list):
-            inputs = []
-            labels = []
-            for kwg in kwargs:
-                inputs.append(
-                    torch.load(
-                        create_path(path=path, inputs_or_labels="inputs", **kwg),
-                    )
-                )
-                labels.append(
-                    torch.load(
-                        create_path(path=path, inputs_or_labels="labels", **kwg),
-                    )
-                )
+        test_inputs = torch.load(
+            create_path(path=path, inputs_or_labels="inputs_test", **kwargs[0]),
+        )
+        test_labels = torch.load(
+            create_path(path=path, inputs_or_labels="labels_test", **kwargs[0]),
+        )
 
-        if len(inputs) == 1:
-            length = len(inputs[0])
-            return {
-                "train": {
-                    "inputs": inputs[: int(length * 0.8)],
-                    "labels": labels[: int(length * 0.8)],
-                },
-                "val": {
-                    "inputs": inputs[int(length * 0.8) : int(length * 0.9)],
-                    "labels": labels[int(length * 0.8) : int(length * 0.9)],
-                },
-                "test": {
-                    "inputs": inputs[int(length * 0.9) :],
-                    "labels": labels[int(length * 0.9) :],
-                },
-            }
-        else:
-            length = len(inputs[0])
-            return {
-                "train": {
-                    "inputs": inputs[0][: int(length * 0.8)],
-                    "labels": labels[0][: int(length * 0.8)],
-                },
-                "val": {
-                    "inputs": inputs[0][int(length * 0.8) :],
-                    "labels": labels[0][int(length * 0.8) :],
-                },
-                "test": [
-                    {
-                        "inputs": inputs[i],
-                        "labels": labels[i],
-                    }
-                    for i in range(1, len(inputs))
-                ],
-            }
+        train_length = len(train_inputs)
+        return {
+            "train": {
+                "inputs": train_inputs[: int(train_length)],
+                "labels": train_labels[: int(train_length)],
+            },
+            "val": {"inputs": train_inputs, "labels": train_labels},
+            "test": {
+                "inputs": test_inputs,
+                "labels": test_labels,
+            },
+        }

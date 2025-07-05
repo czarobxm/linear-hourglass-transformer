@@ -1,0 +1,9 @@
+_target_: data.copying.Copying.create_split_datasets
+use_validation: false
+path: ./datastorage/copying
+max_length: 50
+shuffle: false
+vocab_size: 40
+query_len: 128,20,512 # train, test_start, test_stop
+num_samples: 240000,1 # train samples, test samples
+create_artificial_datasets: true
