@@ -1,4 +1,4 @@
-_target_: data.copying.Copying.create_split_datasets
+_target_: data.selective_copying.SelectiveCopying.create_split_datasets
 use_validation: false
 path: ./datastorage/copying
 max_length: 50
