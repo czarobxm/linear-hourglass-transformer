@@ -103,7 +103,7 @@ def generate_copying_data(
         low=2, high=vocab_size, size=(num_samples, sequence_length)
     )
     mask_matrix = torch.zeros((num_samples, sequence_length)).long() - 100
-    separator = torch.zeros((num_samples, 1)).long()
+    separator = torch.zeros((num_samples, 2)).long()
 
     inputs_not_padded = torch.cat([random_sequence, separator, random_sequence], dim=1)
     labels_not_padded = torch.cat([mask_matrix, separator - 100, random_sequence], dim=1)
