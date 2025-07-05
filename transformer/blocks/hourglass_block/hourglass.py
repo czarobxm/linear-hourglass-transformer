@@ -197,6 +197,19 @@ class HourglassBlock(nn.Module):
         n_downsampling_layers = len(self.downsampling_layers)
 
         x = self.decoder_chunks[0](x, causal=causal, inference=inference)
+
+        if x.size(1) % self.downsampling_layers[0].factor != 0:
+            x = torch.cat(
+                [
+                    x,
+                    torch.zeros(
+                        x.size(0),
+                        x.size(1) % self.downsampling_layers[0].factor,
+                        x.size(2),
+                    ).to(x.device),
+                ],
+                dim=1,
+            )
         residuals.append(x)
 
         # Downsampling path
