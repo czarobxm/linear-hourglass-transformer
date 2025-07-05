@@ -70,7 +70,11 @@ class LinearPool(nn.Module):
         Returns:
             torch.Tensor: Downsampled tensor of shape (batch_size, seq_len // downsampling_factor, d_model)
         """
-        batch_size, seq_len, _ = x.size()
+        batch_size, seq_len, d_model = x.size()
+        x = torch.cat(
+            [x, torch.zeros(batch_size, seq_len % self.downsampling_factor, d_model)],
+            dim=1,
+        )
         new_seq_len = seq_len // self.downsampling_factor
         x = x.contiguous().view(
             batch_size, new_seq_len, self.downsampling_factor * self.d_model
