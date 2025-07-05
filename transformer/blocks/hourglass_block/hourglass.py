@@ -237,6 +237,7 @@ class HourglassBlock(nn.Module):
                     x_upsampled, key_value=x, causal=causal
                 )
 
+            x_upsampled = x_upsampled[:, : residual.size(1), :]
             x = dec(x_upsampled, causal=causal, inference=inference)
 
         return x
