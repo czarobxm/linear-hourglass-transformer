@@ -20,7 +20,7 @@ def main(cfg: ExperimentCfg) -> None:
 
     warmup_steps = 256
     test_steps = 128
-    seq_lens = [128, 512, 1024, 2048, 4096, 8096, 16384]
+    seq_lens = [128, 512, 1024, 2048, 4096, 8096, 16384, 32768, 65536]
 
     for _ in range(warmup_steps):
         x = torch.randint(1, tokenizer.vocab_size, (1, 4096)).to(device)
