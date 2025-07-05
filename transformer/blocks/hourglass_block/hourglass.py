@@ -207,12 +207,12 @@ class HourglassBlock(nn.Module):
             )
         ):
             x = self.shift_right_layers[i](x)
-            if x.size(1) % downsample.downsampling_factor != 0:
+            if x.size(1) % downsample.factor != 0:
                 x = torch.cat(
                     [
                         x,
                         torch.zeros(
-                            x.size(0), x.size(1) % self.downsampling_factor, x.size(2)
+                            x.size(0), x.size(1) % downsample.factor, x.size(2)
                         ).to(x.device),
                     ],
                     dim=1,
