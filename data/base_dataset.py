@@ -125,8 +125,7 @@ class BaseArtificialDataset(BaseDataset):
     ):
         path = Path(path)
         if create_artificial_datasets:
-            if not path.exists():
-                cls.create_artificial_datasets(path, **kwargs)
+            cls.create_artificial_datasets(path, **kwargs)
 
         return super().create_split_datasets(
             use_validation=use_validation,
