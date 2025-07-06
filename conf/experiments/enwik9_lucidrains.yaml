@@ -1,0 +1,15 @@
+hydra:
+  searchpath:
+    - file://conf
+
+defaults:
+  - model: lucidrains
+  - training: default
+  - neptune: default
+  - dataset: enwik9/enwik9_4096
+  - _self_
+
+tokenizer: custom_char_level
+task: sequence_modelling
+device: mps
+seed: 47
