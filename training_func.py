@@ -225,17 +225,15 @@ def evaluate_one_epoch(
     running_vloss = 0
     correct = total = 0
 
-    model.eval()
-    with torch.no_grad():
-        for vdata in loader:
-            vloss, batch_correct, batch_total = evaluate_one_batch(
-                vdata, model, loss_fn, task
-            )
-            running_vloss += vloss
-            correct += batch_correct
-            total += batch_total
-            run[f"metrics/{stage}_loss"].append(vloss)
-            run[f"metrics/{stage}_acc"].append(batch_correct / batch_total)
+    for vdata in loader:
+        vloss, batch_correct, batch_total = evaluate_one_batch(
+            vdata, model, loss_fn, task
+        )
+        running_vloss += vloss
+        correct += batch_correct
+        total += batch_total
+        run[f"metrics/{stage}_loss"].append(vloss)
+        run[f"metrics/{stage}_acc"].append(batch_correct / batch_total)
 
     avg_loss = running_vloss / len(loader)
     accuracy = correct / total
