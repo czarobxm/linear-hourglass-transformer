@@ -48,7 +48,7 @@ class HourglassBlock(nn.Module):
         hourglass_sampling_post_norm: bool = True,
         hourglass_attention_sampling_full_attention: bool = True,
         device: str = "cpu",
-        **kwargs
+        **kwargs,
     ) -> None:
 
         super().__init__()
@@ -195,10 +195,10 @@ class HourglassBlock(nn.Module):
         residuals = []
         missing_tokens_count_list = []
 
-        n_downsampling_layers = len(self.downsampling_layers)
-
+        # Initial chunk
         x = self.decoder_chunks[0](x, causal=causal, inference=inference)
 
+        # Pad tensor if the sizes are incompatible with the downsampling factor
         missing_tokens_count = x.size(1) % self.downsampling_layers[0].factor
         missing_tokens_count_list.append(missing_tokens_count)
         if missing_tokens_count != 0:
@@ -218,39 +218,37 @@ class HourglassBlock(nn.Module):
         # Downsampling path
         for i, (dec, downsample) in enumerate(
             zip(
-                self.decoder_chunks[1 : n_downsampling_layers + 1],
+                self.decoder_chunks[1 : len(self.downsampling_layers) + 1],
                 self.downsampling_layers,
             )
         ):
             x = self.shift_right_layers[i](x)
-            missing_tokens_count = x.size(1) % downsample.factor
-            missing_tokens_count_list.append(missing_tokens_count)
-            if missing_tokens_count != 0:
-                x = torch.cat(
-                    [
-                        x,
-                        torch.zeros(x.size(0), missing_tokens_count, x.size(2)).to(
-                            x.device
-                        ),
-                    ],
-                    dim=1,
-                )
             x_downsampled = downsample(x)
-
             if self.attention_downsampling:
                 x_downsampled = x_downsampled + self.attention_downsampling_layers[i](
                     x_downsampled, key_value=x, causal=causal
                 )
-
             x = dec(x_downsampled, causal=causal, inference=inference)
 
-            if i < n_downsampling_layers - 1:
+            if i < len(self.downsampling_layers) - 1:
                 residuals.append(x)
+                if missing_tokens_count != 0:
+                    x = torch.cat(
+                        [
+                            x,
+                            torch.zeros(x.size(0), missing_tokens_count, x.size(2)).to(
+                                x.device
+                            ),
+                        ],
+                        dim=1,
+                    )
+                missing_tokens_count = x.size(1) % downsample.factor
+                missing_tokens_count_list.append(missing_tokens_count)
 
         # Upsampling path
         for i, (dec, upsample, residual, missing_token_count) in enumerate(
             zip(
-                self.decoder_chunks[n_downsampling_layers + 1 :],
+                self.decoder_chunks[len(self.downsampling_layers) + 1 :],
                 self.upsampling_layers,
                 reversed(residuals),
                 reversed(missing_tokens_count_list),
@@ -267,7 +265,7 @@ class HourglassBlock(nn.Module):
                 )
 
             if missing_token_count != 0:
-                x_upsampled = x_upsampled[:, :missing_tokens_count, :]
+                x_upsampled = x_upsampled[:, :-missing_tokens_count, :]
             x = dec(x_upsampled, causal=causal, inference=inference)
 
         return x
