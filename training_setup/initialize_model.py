@@ -25,7 +25,7 @@ def initialize_model(cfg_model: ModelCfg, vocab_size: int, device: str) -> BaseM
             dim=cfg_model.mha.d_model,
             heads=cfg_model.mha.num_heads,
             shorten_factor=2,
-            depth=(2, 4, 2),
+            depth=(2, 2, 2),
             attn_resampling=False,
             updown_sample_type="linear",
             causal=True,
