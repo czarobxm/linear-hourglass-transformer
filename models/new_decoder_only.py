@@ -6,7 +6,8 @@ import torch.nn.functional as F
 from einops import rearrange, reduce, repeat
 
 
-from models.base import BaseModel
+from transformer.blocks.hourglass_block.utils import ShiftRight
+
 from transformer.blocks.transformer_block import Block
 
 from transformer.multi_head_attention.attention_mechanism.attn_params import (
@@ -232,6 +233,7 @@ class HourglassTransformer(nn.Module):
         # if autoregressive, do the shift by shortening factor minus one
 
         if self.causal:
+            print("causal")
             shift = s - 1
             x = F.pad(x, (0, 0, shift, -shift), value=0.0)
 
@@ -281,6 +283,8 @@ class HourglassTransformerLM(nn.Module):
     ):
         super().__init__()
 
+        self.shift = ShiftRight(shift=1)
+
         self.device = device
 
         self.token_emb = nn.Embedding(num_tokens, dim, device=self.device)
@@ -301,6 +305,7 @@ class HourglassTransformerLM(nn.Module):
         self.to_logits = nn.Linear(dim, num_tokens, device=self.device)
 
     def forward(self, x):
+        x = self.shift(x)
         x = self.token_emb(x)
         x = self.transformer(x)
         return self.to_logits(x)
