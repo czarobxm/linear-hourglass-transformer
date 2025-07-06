@@ -1,0 +1,5 @@
+defaults:
+  - mha: cosformer
+  - hourglass: default
+
+type: lucidrains
