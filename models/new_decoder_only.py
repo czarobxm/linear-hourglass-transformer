@@ -141,7 +141,7 @@ class HourglassTransformer(nn.Module):
         updown_sample_type="naive",
         heads=8,
         dim_head=64,
-        causal=False,
+        causal=True,
         norm_out=False,
         device: str = "cpu",
     ):
