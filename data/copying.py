@@ -224,16 +224,19 @@ class Copying(BaseArtificialDataset):
         kwargs.pop("use_validation")
         kwargs = process_kwargs(kwargs)
 
+        torch.cuda.synchronize()
         train_inputs = torch.load(
             create_path(path=path, inputs_or_labels="inputs", **kwargs[0]),
         )
+        torch.cuda.synchronize()
         train_labels = torch.load(
             create_path(path=path, inputs_or_labels="labels", **kwargs[0]),
         )
-
+        torch.cuda.synchronize()
         test_inputs = torch.load(
             create_path(path=path, inputs_or_labels="inputs_test", **kwargs[0]),
         )
+        torch.cuda.synchronize()
         test_labels = torch.load(
             create_path(path=path, inputs_or_labels="labels_test", **kwargs[0]),
         )
@@ -244,12 +247,8 @@ class Copying(BaseArtificialDataset):
                 "labels": train_labels,
             },
             "val": {"inputs": train_inputs, "labels": train_labels},
-            # "test": {
-            #     "inputs": test_inputs,
-            #     "labels": test_labels,
-            # },
             "test": {
-                "inputs": train_inputs[-1000:],
-                "labels": train_labels[-1000:],
+                "inputs": train_inputs[:1000],
+                "labels": train_labels[:1000],
             },
         }
