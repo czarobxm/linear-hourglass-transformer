@@ -238,15 +238,18 @@ class Copying(BaseArtificialDataset):
             create_path(path=path, inputs_or_labels="labels_test", **kwargs[0]),
         )
 
-        train_length = len(train_inputs)
         return {
             "train": {
-                "inputs": train_inputs[: int(train_length)],
-                "labels": train_labels[: int(train_length)],
+                "inputs": train_inputs,
+                "labels": train_labels,
             },
             "val": {"inputs": train_inputs, "labels": train_labels},
+            # "test": {
+            #     "inputs": test_inputs,
+            #     "labels": test_labels,
+            # },
             "test": {
-                "inputs": test_inputs,
-                "labels": test_labels,
+                "inputs": train_inputs[-1000:],
+                "labels": train_labels[-1000:],
             },
         }
