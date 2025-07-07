@@ -58,9 +58,9 @@ def prepare_inputs_and_targets(
     elif task == "sequence_modelling":
         if isinstance(data, list):
             inputs, targets = data
-            return inputs.detach().to(device), targets.detach().contiguous().view(-1).to(
+            return inputs.detach().clone().to(
                 device
-            )
+            ), targets.clone().detach().contiguous().view(-1).to(device)
         inputs = data.detach().clone().to(device)
         targets = data.detach().contiguous().view(-1).to(device)
         return inputs, targets
@@ -230,6 +230,15 @@ def evaluate_one_epoch(
     correct = total = 0
 
     for vdata in loader:
+        inputs, targets = (
+            vdata[0].detach().contiguous().view(-1),
+            vdata[1].detach().contiguous().view(-1),
+        )
+        mask = targets != -100
+        run[f"metrics/{stage}_obvious_acc"].append(
+            (inputs[mask] == targets[mask]).sum().item()
+        )
+
         vloss, batch_correct, batch_total = evaluate_one_batch(
             vdata, model, loss_fn, task
         )
