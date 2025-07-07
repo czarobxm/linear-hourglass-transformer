@@ -178,6 +178,9 @@ def train_one_epoch(
         total += tot
         lr = optimizer.param_groups[0]["lr"]
 
+        run[f"metrics/train_total"].append(tot)
+        run[f"metrics/train_correct"].append(cor)
+
         log_batch_neptune(
             stage="train",
             run=run,
@@ -234,6 +237,8 @@ def evaluate_one_epoch(
         total += batch_total
         run[f"metrics/{stage}_loss"].append(vloss)
         run[f"metrics/{stage}_acc"].append(batch_correct / batch_total)
+        run[f"metrics/{stage}_total"].append(batch_total)
+        run[f"metrics/{stage}_correct"].append(batch_correct)
 
     avg_loss = running_vloss / len(loader)
     accuracy = correct / total
@@ -317,11 +322,7 @@ def train(
             torch.load(f"models_checkpoints/{run['sys/id'].fetch()}/best.pth")
         )
 
-    if isinstance(test_loader, list):
-        for one_test_loader in test_loader:
-            evaluate_one_epoch(one_test_loader, model, loss_fn, run, cfg.task, "test")
-    else:
-        evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
+    evaluate_one_epoch(test_loader, model, loss_fn, run, cfg.task, "test")
 
     delete_model_checkpoints(run)
 
