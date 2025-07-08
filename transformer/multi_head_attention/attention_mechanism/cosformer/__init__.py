@@ -142,7 +142,8 @@ class Cosformer(BaseAttentionMechanism):
         start_pos: int,
     ) -> List[torch.Tensor]:
         """Feature map for the cosformer attention mechanism."""
-        m = max(src_len, tgt_len)
+        # m = max(src_len, tgt_len)
+        m = 256
         weight_index = get_index(m, start_pos).to(query)
         q_ = query_key_feature_map(query, weight_index, tgt_len, m)  # [B * Nh, L, 2 * h]
         k_ = query_key_feature_map(key, weight_index, src_len, m)  # [B * Nh, S, 2 * Dh]
