@@ -5,5 +5,5 @@ max_length: 50
 shuffle: false
 vocab_size: 40
 query_len: 128,20,512 # train, test_start, test_stop
-num_samples: 240000,1 # train samples, test samples
+num_samples: 250000,1 # train samples, test samples
 create_artificial_datasets: false
