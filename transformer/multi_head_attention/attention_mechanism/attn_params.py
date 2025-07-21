@@ -43,3 +43,4 @@ class CosformerParams(LinearAttnParams):
 
     method: str = field(default="cosformer", init=False)
     eps: float = field(default=1e-6)
+    m: int = field(default=4096)

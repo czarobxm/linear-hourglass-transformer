@@ -97,6 +97,7 @@ class MultiHeadAttention(nn.Module):
                 d_model=self.d_model,
                 num_heads=self.num_heads,
                 eps=self.method_params.eps,
+                m=self.method_params.m,
                 device=self.device,
             )
 

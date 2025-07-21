@@ -26,9 +26,11 @@ from transformer.multi_head_attention.attention_mechanism.cosformer.multihead_re
 )
 
 
-def get_index(seq_len: int, start_pos: int) -> nn.Parameter:
+def get_index(seq_len: int, start_pos: int, m: int) -> nn.Parameter:
     """Create array of indices for the cosformer attention mechanism."""
-    index = np.pi / 2 * torch.arange(start_pos, start_pos + seq_len + 1).reshape(1, -1, 1)
+    index = torch.arange(start_pos, start_pos + seq_len + 1).reshape(1, -1, 1)
+    weights = np.pi / 2 * index / m
+    weights[index > m] = np.pi / 2
     return nn.Parameter(index, requires_grad=False)
 
 
@@ -63,12 +65,13 @@ class Cosformer(BaseAttentionMechanism):
     """
 
     def __init__(
-        self, d_model: int, num_heads: int, eps: float = 1e-6, device: str = "cpu"
+        self, d_model: int, num_heads: int, m: int, eps: float = 1e-6, device: str = "cpu"
     ) -> None:
         """Creates instance and buffers for the cosformer attention mechanism."""
         super().__init__(d_model=d_model, num_heads=num_heads)
         self.eps = eps
         self.device = device
+        self.m = m
         self.register_buffer(
             "kv",
             torch.zeros(self.num_heads, 2 * self.dim_head, self.dim_head, device=device),
@@ -142,12 +145,14 @@ class Cosformer(BaseAttentionMechanism):
         start_pos: int,
     ) -> List[torch.Tensor]:
         """Feature map for the cosformer attention mechanism."""
-        m = max(src_len, tgt_len)
-        weight_index = get_index(m, start_pos).to(query)
+        seq_len = max(src_len, tgt_len)
+        weight_index = get_index(seq_len, start_pos, self.m).to(query)
         q_ = query_key_feature_map(
-            query, weight_index, tgt_len, 256
+            query, weight_index, tgt_len, self.m
         )  # [B * Nh, L, 2 * h]
-        k_ = query_key_feature_map(key, weight_index, src_len, 256)  # [B * Nh, S, 2 * Dh]
+        k_ = query_key_feature_map(
+            key, weight_index, src_len, self.m
+        )  # [B * Nh, S, 2 * Dh]
         return q_, k_
 
     def forward(
