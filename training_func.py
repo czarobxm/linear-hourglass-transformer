@@ -230,14 +230,14 @@ def evaluate_one_epoch(
     correct = total = 0
 
     for vdata in loader:
-        inputs, targets = (
-            vdata[0].detach().contiguous().view(-1),
-            vdata[1].detach().contiguous().view(-1),
-        )
-        mask = targets != -100
-        run[f"metrics/{stage}_obvious_acc"].append(
-            (inputs[mask] == targets[mask]).sum().item()
-        )
+        # inputs, targets = (
+        #     vdata[0].detach().contiguous().view(-1),
+        #     vdata[1].detach().contiguous().view(-1),
+        # )
+        # mask = targets != -100
+        # run[f"metrics/{stage}_obvious_acc"].append(
+        #     (inputs[mask] == targets[mask]).sum().item()
+        # )
 
         vloss, batch_correct, batch_total = evaluate_one_batch(
             vdata, model, loss_fn, task
