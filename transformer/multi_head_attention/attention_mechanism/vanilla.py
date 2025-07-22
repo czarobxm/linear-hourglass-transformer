@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 import math
 import torch
 
@@ -15,6 +15,8 @@ class VanillaAttention(BaseAttentionMechanism):
     def __init__(self, num_heads: int, d_model: int) -> None:
         super().__init__(d_model=d_model, num_heads=num_heads)
         self.head_dim = d_model // num_heads
+        self.k_cache: Optional[torch.Tensor] = None
+        self.v_cache: Optional[torch.Tensor] = None
 
         if self.head_dim * num_heads != self.d_model:
             raise ValueError(
@@ -82,12 +84,38 @@ class VanillaAttention(BaseAttentionMechanism):
         output = attn_weight @ value
         return output.transpose(1, 2)
 
+    def clear_cache(self) -> None:
+        """Clear the KV cache."""
+        self.k_cache = None
+        self.v_cache = None
+
     def inference(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
     ) -> torch.Tensor:
-        raise NotImplementedError(
-            "Inference is not supported for the vanilla attention mechanism."
-        )
+        """
+        Inference with KV caching for single token generation.
+
+        Args:
+            query: Query tensor [B, Nh, 1, Dh] (single token)
+            key: Key tensor [B, Nh, 1, Dh] (single token)
+            value: Value tensor [B, Nh, 1, Dh] (single token)
+
+        Returns:
+            output: Attention output [B, Nh, 1, Dh]
+        """
+        # Concatenate new key/value with cache
+        if self.k_cache is not None and self.v_cache is not None:
+            key = torch.cat([self.k_cache, key], dim=2)
+            value = torch.cat([self.v_cache, value], dim=2)
+
+        # Update cache with current key/value
+        self.k_cache = key
+        self.v_cache = value
+
+        # Apply scaled dot product attention
+        output = self.scaled_dot_product_attention(query, key, value, causal=True)
+
+        return output
 
     def forward(
         self,

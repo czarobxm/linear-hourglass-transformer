@@ -1,3 +1,4 @@
+import copy
 from typing import Union, List, Optional
 
 import torch
@@ -27,8 +28,8 @@ class HourglassBlock(nn.Module):
     def __init__(
         self,
         d_model: int,
-        n_layers: int,
-        sizes: int,
+        n_layers: List[int],
+        sizes: List[int],
         num_heads: int,
         method_params: Union[
             LinearAttnParams,
@@ -172,8 +173,14 @@ class HourglassBlock(nn.Module):
         post_norm: bool,
     ) -> nn.ModuleList:
         """Create decoder chunks."""
-        return nn.ModuleList(
-            [
+        initial_size = self.sizes[0]
+        module_list = nn.ModuleList()
+
+        for n, s in zip(n_layers, self.sizes):
+            method_params_proper_m = copy.deepcopy(method_params)
+            method_params_proper_m.m = int(method_params.m / (initial_size // s))
+
+            module_list.append(
                 Block(
                     n_layers=n,
                     d_model=self.d_model,
@@ -185,9 +192,8 @@ class HourglassBlock(nn.Module):
                     post_norm=post_norm,
                     device=self.device,
                 )
-                for n in n_layers
-            ]
-        )
+            )
+        return module_list
 
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False

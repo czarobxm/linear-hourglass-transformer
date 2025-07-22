@@ -74,11 +74,11 @@ class Cosformer(BaseAttentionMechanism):
         self.m = m
         self.register_buffer(
             "kv",
-            torch.zeros(self.num_heads, 2 * self.dim_head, self.dim_head, device=device),
+            torch.zeros(
+                1, self.num_heads, 2 * self.dim_head, self.dim_head, device=device
+            ),
         )
-        self.register_buffer(
-            "k_", torch.zeros(self.num_heads, 2 * self.dim_head, device=device)
-        )
+        self.register_buffer("k_", torch.zeros(1, self.num_heads, device=device))
         self.to(device)
 
     def reset_cache(self) -> None:
@@ -89,22 +89,21 @@ class Cosformer(BaseAttentionMechanism):
     def inference(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
     ) -> torch.Tensor:
-        """Constant time inference for the linear attention model."""
-        kv_ = torch.einsum(
-            "nld,nlm->ndm", key, value
-        )  # [B, L, 2 * Dh], [B, L, Dh] -> [B, 2 * Dh, Dh]
+        kv = torch.einsum("bnld,bnlm->bnldm", key, value)
+        kv_cum = torch.sum(kv, dim=2)
 
         # Update internal states
         self.kv = (  # pylint: disable=attribute-defined-outside-init
-            self.kv + kv_  # pylint: disable=no-member
+            self.kv + kv_cum  # pylint: disable=no-member
         )
-        self.k_ = self.k_ + key[:, 0, :]  # pylint: disable=no-member
-
         # Calculate denominator: [B, L, 2 * Dh], [B, 2 * Dh] -> [B, L]
-        z_ = 1 / torch.clamp_min(torch.einsum("nld,nd->nl", query, self.k_), self.eps)
+        denom = torch.clamp_min(torch.einsum("bnlm,bnlm->bnl", query, key), self.eps)
+        denom = 1 / torch.sum(denom, dim=2)
+
+        self.k_ = self.k_ + denom
 
         # Compute attention output: [B, L, 2 * Dh], [B, 2 * Dh, Dh], [B, L] -> [B, L, Dh]
-        return torch.einsum("nld,ndm,nl->nlm", query, self.kv, z_)
+        return torch.einsum("bnld,bndm,bn->nlm", query, self.kv, self.k_).unsqueeze(0)
 
     def multihead_reshape(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
@@ -182,7 +181,7 @@ class Cosformer(BaseAttentionMechanism):
         q_, k_ = self.feature_map(query, key, tgt_len, src_len, start_pos)
 
         if inference:
-            raise NotImplementedError("Inference is not supported for the cosformer.")
+            return self.inference(q_, k_, value)
 
         if causal:
             out = attention_causal(q_, k_, value, self.eps, self.kv, self.k_, self.device)
