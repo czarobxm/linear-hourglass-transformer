@@ -32,7 +32,10 @@ def main(cfg: ExperimentCfg) -> None:
             model(x, inference=True)
 
     # Get absolute path for the CSV file in the original working directory
-    output_file = os.path.join(original_cwd, "inference_times.csv")
+    output_file = os.path.join(
+        original_cwd,
+        f"{cfg.model.mha.method_params.method}_{cfg.model.structure}_inference_times.csv",
+    )
     print(f"Saving results to: {output_file}")
 
     # Open CSV file for writing and write header
