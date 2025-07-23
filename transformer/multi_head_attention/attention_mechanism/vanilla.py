@@ -102,19 +102,23 @@ class VanillaAttention(BaseAttentionMechanism):
 
             # Initialize or extend cache
             if self.k_cache is None or self.v_cache is None:
-                self.k_cache = key
-                self.v_cache = value
+                self.k_cache = key.detach()
+                self.v_cache = value.detach()
             else:
                 # Concatenate in-place to avoid extra memory use
-                self.k_cache = torch.cat([self.k_cache, key], dim=2)
-                self.v_cache = torch.cat([self.v_cache, value], dim=2)
+                self.k_cache = torch.cat(
+                    [self.k_cache.detach(), key.detach()], dim=2
+                ).detach()
+                self.v_cache = torch.cat(
+                    [self.v_cache.detach(), value.detach()], dim=2
+                ).detach()
 
             # Apply scaled dot product attention
             output = self.scaled_dot_product_attention(
-                query.detach(), self.k_cache, self.v_cache, causal=True
-            )
+                query.detach(), self.k_cache.detach(), self.v_cache.detach(), causal=True
+            ).detach()
 
-            return output
+            return output.detach()
 
     def forward(
         self,
