@@ -148,7 +148,8 @@ class VanillaAttention(BaseAttentionMechanism):
         # Scaled dot product attention
         if inference:
             # Inference mode uses KV caching
-            return self.inference(query, key, value)
+            with torch.no_grad():
+                return self.inference(query.detach(), key.detach(), value.detach())
         output = self.scaled_dot_product_attention(query, key, value, causal=causal)
 
         return output
