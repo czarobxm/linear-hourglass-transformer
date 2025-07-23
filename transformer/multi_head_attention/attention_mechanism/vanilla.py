@@ -94,28 +94,24 @@ class VanillaAttention(BaseAttentionMechanism):
     ) -> torch.Tensor:
         """
         Inference with KV caching for single token generation.
-
-        Args:
-            query: Query tensor [B, Nh, 1, Dh] (single token)
-            key: Key tensor [B, Nh, 1, Dh] (single token)
-            value: Value tensor [B, Nh, 1, Dh] (single token)
-
-        Returns:
-            output: Attention output [B, Nh, 1, Dh]
         """
         with torch.no_grad():
-            # Concatenate new key/value with cache
-            if self.k_cache is not None and self.v_cache is not None:
-                key = torch.cat([self.k_cache, key.detach()], dim=2)
-                value = torch.cat([self.v_cache, value.detach()], dim=2)
+            # Detach new key/value from graph
+            key = key.detach()
+            value = value.detach()
 
-            # Update cache with current key/value - clone to break computation graph
-            self.k_cache = key.clone()
-            self.v_cache = value.clone()
+            # Initialize or extend cache
+            if self.k_cache is None or self.v_cache is None:
+                self.k_cache = key
+                self.v_cache = value
+            else:
+                # Concatenate in-place to avoid extra memory use
+                self.k_cache = torch.cat([self.k_cache, key], dim=2)
+                self.v_cache = torch.cat([self.v_cache, value], dim=2)
 
             # Apply scaled dot product attention
             output = self.scaled_dot_product_attention(
-                query.detach(), key, value, causal=True
+                query.detach(), self.k_cache, self.v_cache, causal=True
             )
 
             return output
