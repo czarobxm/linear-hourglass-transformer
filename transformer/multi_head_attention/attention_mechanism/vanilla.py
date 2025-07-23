@@ -106,16 +106,16 @@ class VanillaAttention(BaseAttentionMechanism):
         with torch.no_grad():
             # Concatenate new key/value with cache
             if self.k_cache is not None and self.v_cache is not None:
-                key = torch.cat([self.k_cache.detach(), key.detach()], dim=2)
-                value = torch.cat([self.v_cache.detach(), value.detach()], dim=2)
+                key = torch.cat([self.k_cache, key.detach()], dim=2)
+                value = torch.cat([self.v_cache, value.detach()], dim=2)
 
-            # Update cache with current key/value
-            self.k_cache = key.detach()
-            self.v_cache = value.detach()
+            # Update cache with current key/value - clone to break computation graph
+            self.k_cache = key.clone()
+            self.v_cache = value.clone()
 
             # Apply scaled dot product attention
             output = self.scaled_dot_product_attention(
-                query.detach(), key.detach(), value.detach(), causal=True
+                query.detach(), key, value, causal=True
             )
 
             return output
