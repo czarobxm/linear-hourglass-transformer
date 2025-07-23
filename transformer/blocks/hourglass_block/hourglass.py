@@ -177,8 +177,11 @@ class HourglassBlock(nn.Module):
         module_list = nn.ModuleList()
 
         for n, s in zip(n_layers, self.sizes):
-            method_params_proper_m = copy.deepcopy(method_params)
-            method_params_proper_m.m = int(method_params.m / (initial_size // s))
+            try:
+                method_params_proper_m = copy.deepcopy(method_params)
+                method_params_proper_m.m = int(method_params.m / (initial_size // s))
+            except:
+                pass
 
             module_list.append(
                 Block(

@@ -143,6 +143,9 @@ class VanillaAttention(BaseAttentionMechanism):
             D - embedding dimension
         """
         # Scaled dot product attention
+        if inference:
+            # Inference mode uses KV caching
+            return self.inference(query, key, value)
         output = self.scaled_dot_product_attention(query, key, value, causal=causal)
 
         return output
