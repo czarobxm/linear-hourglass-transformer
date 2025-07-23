@@ -93,14 +93,13 @@ class Cosformer(BaseAttentionMechanism):
         kv_cum = torch.sum(kv, dim=2)
 
         # Update internal states
-        self.kv = (  # pylint: disable=attribute-defined-outside-init
-            self.kv + kv_cum  # pylint: disable=no-member
-        )
+        self.kv.add_(kv_cum)  # pylint: disable=no-member
+
         # Calculate denominator: [B, L, 2 * Dh], [B, 2 * Dh] -> [B, L]
         denom = torch.clamp_min(torch.einsum("bnlm,bnlm->bnl", query, key), self.eps)
         denom = 1 / torch.sum(denom, dim=2)
 
-        self.k_ = self.k_ + denom
+        self.k_.add_(denom)
 
         # Compute attention output: [B, L, 2 * Dh], [B, 2 * Dh, Dh], [B, L] -> [B, L, Dh]
         return (
