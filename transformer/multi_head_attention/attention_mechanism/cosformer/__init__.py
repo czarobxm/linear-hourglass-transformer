@@ -103,7 +103,11 @@ class Cosformer(BaseAttentionMechanism):
         self.k_ = self.k_ + denom
 
         # Compute attention output: [B, L, 2 * Dh], [B, 2 * Dh, Dh], [B, L] -> [B, L, Dh]
-        return torch.einsum("bnld,bndm,bn->nlm", query, self.kv, self.k_).unsqueeze(0)
+        return (
+            torch.einsum("bnld,bndm,bn->nlm", query, self.kv, self.k_)
+            .unsqueeze(0)
+            .transpose(1, 2)
+        )
 
     def multihead_reshape(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor

@@ -147,7 +147,6 @@ class MultiHeadAttention(nn.Module):
         query, key, value = self.attention_mechanism.multihead_reshape(
             query=query, key=key, value=value
         )
-
         # Apply rotary position encoding
         if self.apply_rotary_pos_enc:
             query = self.rotary_pos_enc.rotate_queries_or_keys(query)
@@ -157,10 +156,8 @@ class MultiHeadAttention(nn.Module):
         attention_result = self.attention_mechanism(
             query, key, value, causal=causal, inference=inference
         )
-
         # Undo multi-head reshape from [B, Nh, L, Dh] to [B, L, D]
         attention_result = self.attention_mechanism.undo_multihead_reshape(
             attention_result
         )
-
         return attention_result

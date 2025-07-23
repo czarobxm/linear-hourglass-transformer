@@ -1,8 +1,6 @@
 import csv
-
 import hydra
 import torch
-
 from conf.definitions import ExperimentCfg
 from training_setup import (
     initialize_model,
@@ -23,27 +21,49 @@ def main(cfg: ExperimentCfg) -> None:
     warmup_steps = 256
     test_steps = 16384
 
-    for _ in range(warmup_steps):
+    # Warmup phase
+    print("Starting warmup...")
+    for i in range(warmup_steps):
         x = torch.randint(1, tokenizer.vocab_size, (1, 4096)).to(device)
-        model(x)
+        model(x, inference=True)
 
-    for _ in range(1, test_steps + 1):
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
+    print("Starting inference timing tests...")
 
-        x = torch.randint(1, tokenizer.vocab_size, (1, 1)).to(device)
-        inference_times = []
-        for _ in range(test_steps):
-            start.record()
-            model(x, inference=True)
-            end.record()
-            torch.cuda.synchronize()
-            inference_times.append(start.elapsed_time(end))
-            print(inference_times[-1])
-
+    # Open CSV file for writing and write header
     with open("inference_times.csv", "w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(inference_times)
+        writer.writerow(["step", "inference_time_ms"])  # Header row
+
+        # Testing phase - save after each measurement
+        for step in range(1, test_steps + 1):
+            try:
+                start = torch.cuda.Event(enable_timing=True)
+                end = torch.cuda.Event(enable_timing=True)
+                x = torch.randint(1, tokenizer.vocab_size, (1, 1)).to(device)
+
+                start.record()
+                model(x, inference=True)
+                end.record()
+                torch.cuda.synchronize()
+
+                inference_time = start.elapsed_time(end)
+                print(f"Step {step}: {inference_time:.4f} ms")
+
+                # Write immediately to file to preserve data
+                writer.writerow([step, inference_time])
+                file.flush()  # Force write to disk
+
+            except RuntimeError as e:
+                if "out of memory" in str(e).lower():
+                    print(f"OOM error at step {step}: {e}")
+                    print(f"Results saved up to step {step-1}")
+                    break
+                else:
+                    raise e
+            except Exception as e:
+                print(f"Unexpected error at step {step}: {e}")
+                print(f"Results saved up to step {step-1}")
+                break
 
 
 if __name__ == "__main__":
