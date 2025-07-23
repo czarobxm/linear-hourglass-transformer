@@ -18,6 +18,9 @@ class VanillaAttention(BaseAttentionMechanism):
         self.k_cache: Optional[torch.Tensor] = None
         self.v_cache: Optional[torch.Tensor] = None
 
+        self.cache_pos = 0
+        self.max_seq_len = 16384
+
         if self.head_dim * num_heads != self.d_model:
             raise ValueError(
                 f"embed_dim {d_model} not divisible by num_heads {num_heads}"
@@ -93,32 +96,52 @@ class VanillaAttention(BaseAttentionMechanism):
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
     ) -> torch.Tensor:
         """
-        Inference with KV caching for single token generation.
+        Efficient inference with pre-allocated KV caching.
+
+        Args:
+            query (torch.Tensor): Query tensor for the current token, size [B, Nh, 1, Dh]
+            key (torch.Tensor): Key tensor for the current token, size [B, Nh, 1, Dh]
+            value (torch.Tensor): Value tensor for the current token, size [B, Nh, 1, Dh]
         """
         with torch.no_grad():
-            # Detach new key/value from graph
-            key = key.detach()
-            value = value.detach()
+            batch_size, _, seq_len, _ = key.shape
+            assert (
+                seq_len == 1
+            ), "KV caching is implemented for single-token generation only."
 
-            # Initialize or extend cache
-            if self.k_cache is None or self.v_cache is None:
-                self.k_cache = key.detach()
-                self.v_cache = value.detach()
-            else:
-                # Concatenate in-place to avoid extra memory use
-                self.k_cache = torch.cat(
-                    [self.k_cache.detach(), key.detach()], dim=2
-                ).detach()
-                self.v_cache = torch.cat(
-                    [self.v_cache.detach(), value.detach()], dim=2
-                ).detach()
+            # Initialize cache on the first inference pass
+            if self.k_cache is None:
+                self.k_cache = torch.zeros(
+                    (batch_size, self.num_heads, self.max_seq_len, self.head_dim),
+                    dtype=key.dtype,
+                    device=key.device,
+                )
+                self.v_cache = torch.zeros(
+                    (batch_size, self.num_heads, self.max_seq_len, self.head_dim),
+                    dtype=value.dtype,
+                    device=value.device,
+                )
+
+            if self.cache_pos >= self.max_seq_len:
+                raise ValueError(
+                    "KV Cache is full. Increase max_seq_len or clear the cache."
+                )
+
+            # Update cache in-place
+            self.k_cache[:, :, self.cache_pos : self.cache_pos + 1, :] = key
+            self.v_cache[:, :, self.cache_pos : self.cache_pos + 1, :] = value
+            self.cache_pos += 1
+
+            # Get the active part of the cache
+            keys = self.k_cache[:, :, : self.cache_pos, :]
+            values = self.v_cache[:, :, : self.cache_pos, :]
 
             # Apply scaled dot product attention
-            output = self.scaled_dot_product_attention(
-                query.detach(), self.k_cache.detach(), self.v_cache.detach(), causal=True
-            ).detach()
+            output = self.scaled_dot_product_attention(query, keys, values, causal=False)
 
-            return output.detach()
+            # The original code had a transpose here, which is now handled by undo_multihead_reshape
+            # so we return the standard [B, Nh, L, Dh] output.
+            return output
 
     def forward(
         self,
@@ -149,7 +172,9 @@ class VanillaAttention(BaseAttentionMechanism):
         if inference:
             # Inference mode uses KV caching
             with torch.no_grad():
-                return self.inference(query.detach(), key.detach(), value.detach())
+                return self.inference(
+                    query.detach(), key.detach(), value.detach()
+                ).detach()
         output = self.scaled_dot_product_attention(query, key, value, causal=causal)
 
         return output

@@ -28,7 +28,7 @@ def main(cfg: ExperimentCfg) -> None:
     # Warmup phase
     with torch.no_grad():
         for i in range(warmup_steps):
-            x = torch.randint(1, tokenizer.vocab_size, (1, 4096)).to(device)
+            x = torch.randint(1, tokenizer.vocab_size, (1, 1)).to(device)
             model(x, inference=True)
 
     # Get absolute path for the CSV file in the original working directory
