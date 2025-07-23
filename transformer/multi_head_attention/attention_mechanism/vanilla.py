@@ -103,19 +103,22 @@ class VanillaAttention(BaseAttentionMechanism):
         Returns:
             output: Attention output [B, Nh, 1, Dh]
         """
-        # Concatenate new key/value with cache
-        if self.k_cache is not None and self.v_cache is not None:
-            key = torch.cat([self.k_cache, key], dim=2)
-            value = torch.cat([self.v_cache, value], dim=2)
+        with torch.no_grad():
+            # Concatenate new key/value with cache
+            if self.k_cache is not None and self.v_cache is not None:
+                key = torch.cat([self.k_cache.detach(), key.detach()], dim=2)
+                value = torch.cat([self.v_cache.detach(), value.detach()], dim=2)
 
-        # Update cache with current key/value
-        self.k_cache = key
-        self.v_cache = value
+            # Update cache with current key/value
+            self.k_cache = key.detach()
+            self.v_cache = value.detach()
 
-        # Apply scaled dot product attention
-        output = self.scaled_dot_product_attention(query, key, value, causal=True)
+            # Apply scaled dot product attention
+            output = self.scaled_dot_product_attention(
+                query.detach(), key.detach(), value.detach(), causal=True
+            )
 
-        return output
+            return output
 
     def forward(
         self,
