@@ -9,17 +9,17 @@ from transformer.blocks.hourglass_block.utils import ShiftRight
 from transformer.blocks.hourglass_block.downsampling import DownsamplingLayer
 from transformer.blocks.hourglass_block.upsampling import UpsamplingLayer
 
-from mamba_ssm.models.mixer_seq_simple import (
-    _init_weights,
-    create_block,
-    MambaLMHeadModel,
-    MambaConfig,
-)
+# from mamba_ssm.models.mixer_seq_simple import (
+#     _init_weights,
+#     create_block,
+#     MambaLMHeadModel,
+#     MambaConfig,
+# )
 
-try:
-    from mamba_ssm.ops.triton.layer_norm import RMSNorm, layer_norm_fn, rms_norm_fn
-except ImportError:
-    RMSNorm, layer_norm_fn, rms_norm_fn = None, None, None
+# try:
+#     from mamba_ssm.ops.triton.layer_norm import RMSNorm, layer_norm_fn, rms_norm_fn
+# except ImportError:
+#     RMSNorm, layer_norm_fn, rms_norm_fn = None, None, None
 
 
 class MambaBlock(nn.Module):
