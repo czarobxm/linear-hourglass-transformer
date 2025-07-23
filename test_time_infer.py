@@ -1,4 +1,5 @@
 import csv
+import os
 import hydra
 import torch
 from conf.definitions import ExperimentCfg
@@ -13,6 +14,9 @@ from training_setup import (
     version_base=None, config_path="conf/experiments", config_name="enwik9_vanilla_8x4096"
 )
 def main(cfg: ExperimentCfg) -> None:
+    # Save original working directory before Hydra changes it
+    original_cwd = hydra.utils.get_original_cwd()
+
     device = cfg.device
     setup_random_seed(cfg.seed)
     tokenizer = setup_tokenizer(cfg.tokenizer)
@@ -29,8 +33,12 @@ def main(cfg: ExperimentCfg) -> None:
 
     print("Starting inference timing tests...")
 
+    # Get absolute path for the CSV file in the original working directory
+    output_file = os.path.join(original_cwd, "inference_times.csv")
+    print(f"Saving results to: {output_file}")
+
     # Open CSV file for writing and write header
-    with open("inference_times.csv", "w", newline="") as file:
+    with open(output_file, "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["step", "inference_time_ms"])  # Header row
 
