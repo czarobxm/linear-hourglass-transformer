@@ -39,7 +39,6 @@ def main(cfg: ExperimentCfg) -> None:
         x = torch.randint(1, tokenizer.vocab_size, (1, seq_len)).to(device)
         inference_times = []
         for _ in range(test_steps):
-            print(model(x).shape, x.shape)
             loss = criterion(
                 model(x).view(seq_len, tokenizer.vocab_size), x.view(seq_len)
             )
