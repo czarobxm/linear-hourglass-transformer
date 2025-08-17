@@ -112,7 +112,6 @@ class VanillaAttention(BaseAttentionMechanism):
                 self.v_cache = torch.cat(
                     [self.v_cache.detach(), value.detach()], dim=2
                 ).detach()
-                print(self.k_cache.shape, self.v_cache.shape)
 
             # Apply scaled dot product attention
             output = self.scaled_dot_product_attention(

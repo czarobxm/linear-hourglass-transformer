@@ -49,7 +49,7 @@ def main(cfg: ExperimentCfg) -> None:
                 try:
                     start = torch.cuda.Event(enable_timing=True)
                     end = torch.cuda.Event(enable_timing=True)
-                    x = torch.randint(1, tokenizer.vocab_size, (1, 1)).to(device)
+                    x = torch.randint(1, tokenizer.vocab_size, (1, 2)).to(device)
 
                     start.record()
                     model(x, inference=True)
