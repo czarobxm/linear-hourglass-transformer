@@ -23,7 +23,7 @@ def main(cfg: ExperimentCfg) -> None:
     model = initialize_model(cfg.model, tokenizer.vocab_size, device=device)
 
     warmup_steps = 256
-    test_steps = 16384
+    test_steps = 163840
 
     # Warmup phase
     with torch.no_grad():
